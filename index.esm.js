@@ -1,4 +1,4 @@
-import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBoolean } from 'locustjs-base';
+import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBool } from 'locustjs-base';
 import { contains } from 'locustjs-extensions-array';
 
 const formEachElement = function () {
@@ -122,11 +122,11 @@ const isEditable = el => {
 }
 
 const formEach = (selector, callback, excludes) => {
-    return formEachElement(selector, (frm, el, i, j) => {
-        if (isEditable(el)) {
-            return callback(frm, el, i, j);
-        }
-    }, excludes);
+	if (excludes == undefined) {
+		excludes = el => !isEditable(el);
+	}
+	
+    return formEachElement(selector, callback, excludes);
 }
 
 const disableForm = (selector, value = true) => formEachElement(selector, (frm, el) => el.disabled = value);
@@ -218,7 +218,7 @@ const fromJson = (selector, obj, excludes) => {
 
             if (value != null) {
                 if ((_type == 'checkbox' || _type == 'radio')) {
-                    if (isBoolean(value)) {
+                    if (isBool(value)) {
                         el.checked = value;
                     } else if (isArray(value)) {
                         el.checked = value.indexOf(el.value) >= 0;
@@ -244,7 +244,129 @@ const fromJson = (selector, obj, excludes) => {
         }, excludes);
     }
 };
+const toArray = (selector, excludes) => {
+    let result = [];
 
+    formEach(selector, (frm, el, i, j) => {
+        if (result[j] == undefined) {
+            result[j] = [];
+        }
+
+        let _type = (el.type || '').toLowerCase();
+        let _tag = (el.tagName || '').toLowerCase();
+        let _name = el.name;
+        let _id = el.id;
+        let _key = _name || _id;
+
+        if (isEmpty(_key)) {
+            _key = i;
+        }
+
+        if (_type == 'checkbox') {
+			let index = -1;
+			let arr;
+			
+			for (let ii = 0; ii < result[j].length; ii++) {
+				if (result[j][ii].name == _key) {
+					index = ii;
+					break;
+				}
+			}
+			
+			if (index >= 0) {
+				arr = result[j][index].value;
+			}
+			
+            if (el.checked) {
+				if (arr) {
+					arr.push(el.value);
+                } else {
+					result[j].push({ name: _key, value: [ el.value ] });
+				}
+            }
+        } else if (_tag == 'select') {
+			if (el.multiple) {
+				let temp = [];
+				
+				for (let ii = 0; ii < el.selectedOptions.length; ii++) {
+					temp.push(el.selectedOptions[ii].value);
+				}
+				
+				result[j].push({ name: _key, value: temp });
+			} else {
+				result[j].push({ name: _key, value: el.options[el.selectedIndex].value });
+			}
+        } else {
+            result[j].push({ name: _key, value: el.value });
+        }
+    }, excludes);
+
+    if (result.length == 0) {
+        return [];
+    } else if (result.length == 1) {
+        return result[0];
+    }
+
+    return result;
+};
+const fromArray = (selector, obj, excludes) => {
+    if (isArray(obj)) {
+		let isArrayOfArray = true;
+		
+		for (let i = 0; i < obj.length; i++) {
+			if (!isArray(obj[i])) {
+				isArrayOfArray = false;
+				break;
+			}
+		}
+		
+        formEach(selector, (frm, el, i, j) => {
+            let _type = (el.type || '').toLowerCase();
+            let _tag = (el.tagName || '').toLowerCase();
+            let _name = el.name;
+            let _id = el.id;
+            let _key = _name || _id;
+
+            if (isEmpty(_key)) {
+                _key = i;
+            }
+
+            let data = isArrayOfArray ? obj[j]: obj;
+            let item = data.find(x => x.name == _key);
+            let value;
+            
+            if (item) {
+				value = item.value;
+            }
+
+            if (value != null) {
+                if ((_type == 'checkbox' || _type == 'radio')) {
+                    if (isBool(value)) {
+                        el.checked = value;
+                    } else if (isArray(value)) {
+                        el.checked = value.indexOf(el.value) >= 0;
+                    } else {
+                        el.checked = el.value == value;
+                    }
+                } else if (_tag == 'select') {
+					if (el.multiple) {
+						if (isArray(value)) {
+							for (let ii = 0; ii < el.options.length; ii++) {
+								el.options[ii].selected = contains(value, el.options[ii].value);
+							}
+						} else {
+							el.selectedIndex = value;
+						}
+					} else {
+						el.selectedIndex = value;
+					}
+                } else {
+                    el.value = value;
+                }
+            }
+        }, excludes);
+    }
+};
 const post = function () {
 	if (arguments.length) {
 		const options = {
@@ -432,40 +554,46 @@ class Form {
 		this._form = value;
 	}
 	each(callback, excludes) {
-		return formEach(this._form, callback, excludes);
+		return formEach(this.instance, callback, excludes);
 	}
 	eachElement(callback, excludes) {
-		return formEachElement(this._form, callback, excludes);
+		return formEachElement(this.instance, callback, excludes);
 	}
 	enable(value = true) {
-		enableForm(this._form, value);
+		enableForm(this.instance, value);
 	}
 	disable(value = true) {
-		disableForm(this._form, value);
+		disableForm(this.instance, value);
 	}
 	readOnly(value = true) {
-		readOnlyForm(this._form, value);
+		readOnlyForm(this.instance, value);
 	}
 	unreadOnly(value = true) {
-		unreadOnlyForm(this._form, value);
+		unreadOnlyForm(this.instance, value);
 	}
 	clear() {
-		clearForm(this._form);
+		clearForm(this.instance);
 	}
 	reset() {
-		resetForm(this._form);
+		resetForm(this.instance);
 	}
 	fromJson() {
-		fromJson(this._form);
+		fromJson(this.instance);
 	}
 	toJson() {
-		return toJson(this._form);
+		return toJson(this.instance);
+	}
+	fromArray() {
+		fromArray(this.instance);
+	}
+	toArray() {
+		return toArray(this.instance);
 	}
 	getValue(key) {
-		return getValue(this._form, key);
+		return getValue(this.instance, key);
 	}
 	setValue(key, value) {
-		setValue(this._form, key, value);
+		setValue(this.instance, key, value);
 	}
 }
 
@@ -476,8 +604,10 @@ const FormHelper = {
 	enable: enableForm,
 	readOnly: readOnlyForm,
 	unreadOnly: unreadOnlyForm,
-	fromJson: fromJson,
+	toArray: toArray,
+	fromArray: fromArray,
 	toJson: toJson,
+	fromJson: fromJson,
 	clear: clearForm,
 	reset: resetForm,
 	post: post,
@@ -502,6 +632,8 @@ export {
     setValue,
     toJson,
     fromJson,
+    toArray,
+    fromArray,
     post,
     Form
 }

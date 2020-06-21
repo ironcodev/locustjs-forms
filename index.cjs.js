@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Form = exports.post = exports.fromJson = exports.toJson = exports.setValue = exports.getValue = exports.unreadOnlyForm = exports.readOnlyForm = exports.resetForm = exports.clearForm = exports.enableForm = exports.disableForm = exports.isEditable = exports.formEach = exports.formEachElement = exports.default = void 0;
+exports.Form = exports.post = exports.fromArray = exports.toArray = exports.fromJson = exports.toJson = exports.setValue = exports.getValue = exports.unreadOnlyForm = exports.readOnlyForm = exports.resetForm = exports.clearForm = exports.enableForm = exports.disableForm = exports.isEditable = exports.formEach = exports.formEachElement = exports.default = void 0;
 
 var _locustjsBase = require("locustjs-base");
 
@@ -159,11 +159,13 @@ var isEditable = function isEditable(el) {
 exports.isEditable = isEditable;
 
 var formEach = function formEach(selector, callback, excludes) {
-  return formEachElement(selector, function (frm, el, i, j) {
-    if (isEditable(el)) {
-      return callback(frm, el, i, j);
-    }
-  }, excludes);
+  if (excludes == undefined) {
+    excludes = function excludes(el) {
+      return !isEditable(el);
+    };
+  }
+
+  return formEachElement(selector, callback, excludes);
 };
 
 exports.formEach = formEach;
@@ -318,7 +320,7 @@ var _fromJson = function fromJson(selector, obj, excludes) {
 
       if (value != null) {
         if (_type == 'checkbox' || _type == 'radio') {
-          if ((0, _locustjsBase.isBoolean)(value)) {
+          if ((0, _locustjsBase.isBool)(value)) {
             el.checked = value;
           } else if ((0, _locustjsBase.isArray)(value)) {
             el.checked = value.indexOf(el.value) >= 0;
@@ -346,6 +348,154 @@ var _fromJson = function fromJson(selector, obj, excludes) {
 };
 
 exports.fromJson = _fromJson;
+
+var _toArray = function toArray(selector, excludes) {
+  var result = [];
+  formEach(selector, function (frm, el, i, j) {
+    if (result[j] == undefined) {
+      result[j] = [];
+    }
+
+    var _type = (el.type || '').toLowerCase();
+
+    var _tag = (el.tagName || '').toLowerCase();
+
+    var _name = el.name;
+    var _id = el.id;
+
+    var _key = _name || _id;
+
+    if ((0, _locustjsBase.isEmpty)(_key)) {
+      _key = i;
+    }
+
+    if (_type == 'checkbox') {
+      var index = -1;
+      var arr;
+
+      for (var ii = 0; ii < result[j].length; ii++) {
+        if (result[j][ii].name == _key) {
+          index = ii;
+          break;
+        }
+      }
+
+      if (index >= 0) {
+        arr = result[j][index].value;
+      }
+
+      if (el.checked) {
+        if (arr) {
+          arr.push(el.value);
+        } else {
+          result[j].push({
+            name: _key,
+            value: [el.value]
+          });
+        }
+      }
+    } else if (_tag == 'select') {
+      if (el.multiple) {
+        var temp = [];
+
+        for (var _ii = 0; _ii < el.selectedOptions.length; _ii++) {
+          temp.push(el.selectedOptions[_ii].value);
+        }
+
+        result[j].push({
+          name: _key,
+          value: temp
+        });
+      } else {
+        result[j].push({
+          name: _key,
+          value: el.options[el.selectedIndex].value
+        });
+      }
+    } else {
+      result[j].push({
+        name: _key,
+        value: el.value
+      });
+    }
+  }, excludes);
+
+  if (result.length == 0) {
+    return [];
+  } else if (result.length == 1) {
+    return result[0];
+  }
+
+  return result;
+};
+
+exports.toArray = _toArray;
+
+var _fromArray = function fromArray(selector, obj, excludes) {
+  if ((0, _locustjsBase.isArray)(obj)) {
+    var isArrayOfArray = true;
+
+    for (var i = 0; i < obj.length; i++) {
+      if (!(0, _locustjsBase.isArray)(obj[i])) {
+        isArrayOfArray = false;
+        break;
+      }
+    }
+
+    formEach(selector, function (frm, el, i, j) {
+      var _type = (el.type || '').toLowerCase();
+
+      var _tag = (el.tagName || '').toLowerCase();
+
+      var _name = el.name;
+      var _id = el.id;
+
+      var _key = _name || _id;
+
+      if ((0, _locustjsBase.isEmpty)(_key)) {
+        _key = i;
+      }
+
+      var data = isArrayOfArray ? obj[j] : obj;
+      var item = data.find(function (x) {
+        return x.name == _key;
+      });
+      var value;
+
+      if (item) {
+        value = item.value;
+      }
+
+      if (value != null) {
+        if (_type == 'checkbox' || _type == 'radio') {
+          if ((0, _locustjsBase.isBool)(value)) {
+            el.checked = value;
+          } else if ((0, _locustjsBase.isArray)(value)) {
+            el.checked = value.indexOf(el.value) >= 0;
+          } else {
+            el.checked = el.value == value;
+          }
+        } else if (_tag == 'select') {
+          if (el.multiple) {
+            if ((0, _locustjsBase.isArray)(value)) {
+              for (var ii = 0; ii < el.options.length; ii++) {
+                el.options[ii].selected = (0, _locustjsExtensionsArray.contains)(value, el.options[ii].value);
+              }
+            } else {
+              el.selectedIndex = value;
+            }
+          } else {
+            el.selectedIndex = value;
+          }
+        } else {
+          el.value = value;
+        }
+      }
+    }, excludes);
+  }
+};
+
+exports.fromArray = _fromArray;
 
 var post = function post() {
   if (arguments.length) {
@@ -532,66 +682,76 @@ var Form = /*#__PURE__*/function () {
   _createClass(Form, [{
     key: "each",
     value: function each(callback, excludes) {
-      return formEach(this._form, callback, excludes);
+      return formEach(this.instance, callback, excludes);
     }
   }, {
     key: "eachElement",
     value: function eachElement(callback, excludes) {
-      return formEachElement(this._form, callback, excludes);
+      return formEachElement(this.instance, callback, excludes);
     }
   }, {
     key: "enable",
     value: function enable() {
       var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      enableForm(this._form, value);
+      enableForm(this.instance, value);
     }
   }, {
     key: "disable",
     value: function disable() {
       var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      disableForm(this._form, value);
+      disableForm(this.instance, value);
     }
   }, {
     key: "readOnly",
     value: function readOnly() {
       var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      readOnlyForm(this._form, value);
+      readOnlyForm(this.instance, value);
     }
   }, {
     key: "unreadOnly",
     value: function unreadOnly() {
       var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      unreadOnlyForm(this._form, value);
+      unreadOnlyForm(this.instance, value);
     }
   }, {
     key: "clear",
     value: function clear() {
-      clearForm(this._form);
+      clearForm(this.instance);
     }
   }, {
     key: "reset",
     value: function reset() {
-      resetForm(this._form);
+      resetForm(this.instance);
     }
   }, {
     key: "fromJson",
     value: function fromJson() {
-      _fromJson(this._form);
+      _fromJson(this.instance);
     }
   }, {
     key: "toJson",
     value: function toJson() {
-      return _toJson(this._form);
+      return _toJson(this.instance);
+    }
+  }, {
+    key: "fromArray",
+    value: function fromArray() {
+      _fromArray(this.instance);
+    }
+  }, {
+    key: "toArray",
+    value: function toArray() {
+      return _toArray(this.instance);
     }
   }, {
     key: "getValue",
     value: function getValue(key) {
-      return _getValue(this._form, key);
+      return _getValue(this.instance, key);
     }
   }, {
     key: "setValue",
     value: function setValue(key, value) {
-      _setValue(this._form, key, value);
+      _setValue(this.instance, key, value);
     }
   }, {
     key: "instance",
@@ -614,8 +774,10 @@ var FormHelper = {
   enable: enableForm,
   readOnly: readOnlyForm,
   unreadOnly: unreadOnlyForm,
-  fromJson: _fromJson,
+  toArray: _toArray,
+  fromArray: _fromArray,
   toJson: _toJson,
+  fromJson: _fromJson,
   clear: clearForm,
   reset: resetForm,
   post: post,

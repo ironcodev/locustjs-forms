@@ -1,6 +1,6 @@
 {
   "name": "locustjs-forms",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This library provides utility functions to interact with forms and form elements in a web page.",
   "main": "index.js",
   "scripts": {
