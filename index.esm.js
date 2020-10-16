@@ -23,14 +23,16 @@ const formEachElement = function () {
 			if (isArray(arg)) {
 				const classNames = arg.filter(x => x && x[0] == '.');
 				
-				excludes = el => {
+				excludes = (frm, el) => {
 					if (contains(arg, el.tagName)) {
 						return true;
 					}
 					
 					for (let className of classNames) {
-						if ((el.className + ' ').indexOf(className.substr(1) + ' ')) {
-							return true;
+						for (let elClassName of el.classList) {
+							if (elClassName == className.substr(1)) {
+								return true;
+							}
 						}
 					}
 					
@@ -91,6 +93,10 @@ const formEachElement = function () {
 				let elements = frm && frm.elements;
 				let arr = [];
 				
+				if (isEmpty(elements) || elements.length == 0) {
+					elements = frm.querySelectorAll('input, select, textarea');
+				}
+				
 				if (!isEmpty(elements) && elements.length) {
 					for (let j = 0; j < elements.length; j++) {
 						if (!hasExcludes || !excludes(frm, elements[j], j, i)) {
@@ -123,7 +129,7 @@ const isEditable = el => {
 
 const formEach = (selector, callback, excludes) => {
 	if (excludes == undefined) {
-		excludes = el => !isEditable(el);
+		excludes = (frm, el) => !isEditable(el);
 	}
 	
     return formEachElement(selector, callback, excludes);
@@ -151,9 +157,12 @@ const clearForm = (selector) => formEach(selector, (frm, el, i) => {
     }
 });
 
+const hasValue = el => el.value != null && el.value != '' && (!(el.type == 'checkbox' || el.type == 'radio') || el.value != 'on');
+
 const toJson = (selector, excludes) => {
     let result = [];
-
+	let checkboxes = [];
+	
     formEach(selector, (frm, el, i, j) => {
         if (result[j] == undefined) {
             result[j] = {};
@@ -173,10 +182,30 @@ const toJson = (selector, excludes) => {
 			if (!isArray(result[j][_key])) {
 				result[j][_key] = [];
 			}
+
+			let item = checkboxes.find(x => x.form == j && x.key == _key);
 			
-            if (el.checked) {
-                result[j][_key].push(el.value);
-            }
+			if (!item) {
+				checkboxes.push({ form: j, key: _key, count: 1 });
+			} else {
+				item.count++;
+			}
+			
+			if (el.checked) {
+				if (hasValue(el)) {
+					result[j][_key].push(el.value);
+				} else {
+					result[j][_key].push({ index: item.count });
+				}
+			}
+		} else if (_type == 'radio') {
+			if (el.checked) {
+				if (hasValue(el)) {
+					result[j][_key] = el.value;
+				} else {
+					result[j][_key] = true;
+				}
+			}
         } else if (_tag == 'select') {
 			if (el.multiple) {
 				result[j][_key] = [];
@@ -187,6 +216,8 @@ const toJson = (selector, excludes) => {
 			} else {
 				result[j][_key] = el.options[el.selectedIndex].value;
 			}
+        } else if (_tag == 'button') {
+			result[j][_key] = el.innerText;
         } else {
             result[j][_key] = el.value;
         }
@@ -194,14 +225,26 @@ const toJson = (selector, excludes) => {
 
     if (result.length == 0) {
         return {};
-    } else if (result.length == 1) {
-        return result[0];
-    }
-
-    return result;
+    } else {
+		if (checkboxes.length > 0) {
+			for (let item of checkboxes) {
+				if (item.count == 1 && result[item.form][item.key].length == 1) {
+					result[item.form][item.key] = result[item.form][item.key][0];
+				}
+			}
+		}
+		
+		if (result.length == 1) {
+			result = result[0];
+		}
+	}
+	
+	return result;
 };
 const fromJson = (selector, obj, excludes) => {
     if (isSomeObject(obj) || isArray(obj)) {
+		let checkboxes = [];
+		
         formEach(selector, (frm, el, i, j) => {
             let _type = (el.type || '').toLowerCase();
             let _tag = (el.tagName || '').toLowerCase();
@@ -218,12 +261,44 @@ const fromJson = (selector, obj, excludes) => {
 
             if (value != null) {
                 if ((_type == 'checkbox' || _type == 'radio')) {
+					let item = checkboxes.find(x => x.form == j && x.key == _key);
+			
+					if (!item) {
+						checkboxes.push({ form: j, key: _key, count: 1 });
+					} else {
+						item.count++;
+					}
+					
                     if (isBool(value)) {
                         el.checked = value;
                     } else if (isArray(value)) {
-                        el.checked = value.indexOf(el.value) >= 0;
+						if (value.length == 1) {
+							if (isObject(value[0])) {
+								el.checked = item.count == value[0].index;
+							} else {
+								if (hasValue(el)) {
+									el.checked = el.value == value[0];
+								} else {
+									el.checked = value[0];
+								}
+							}
+						} else {
+							if (hasValue(el)) {
+								el.checked = value.indexOf(el.value) >= 0 || (value.filter(x => isObject(x)).find(x => x.index == item.count) != undefined);
+							} else {
+								el.checked = (value.filter(x => isObject(x)).find(x => x.index == item.count) != undefined);
+							}
+						}
                     } else {
-                        el.checked = el.value == value;
+						if (isObject(value)) {
+							el.checked = item.count == value.index;
+						} else {
+							if (hasValue(el)) {
+								el.checked = el.value == value;
+							} else {
+								el.checked = value;
+							}
+						}
                     }
                 } else if (_tag == 'select') {
 					if (el.multiple) {
@@ -246,7 +321,8 @@ const fromJson = (selector, obj, excludes) => {
 };
 const toArray = (selector, excludes) => {
     let result = [];
-
+	let checkboxes = [];
+	
     formEach(selector, (frm, el, i, j) => {
         if (result[j] == undefined) {
             result[j] = [];
@@ -263,6 +339,14 @@ const toArray = (selector, excludes) => {
         }
 
         if (_type == 'checkbox') {
+			let item = checkboxes.find(x => x.form == j && x.key == _key);
+					
+			if (!item) {
+				checkboxes.push({ form: j, key: _key, count: 1 });
+			} else {
+				item.count++;
+			}
+			
 			let index = -1;
 			let arr;
 			
@@ -279,11 +363,27 @@ const toArray = (selector, excludes) => {
 			
             if (el.checked) {
 				if (arr) {
-					arr.push(el.value);
+					if (hasValue(el)) {
+						arr.push(el.value);
+					} else {
+						arr.push(true);
+					}
                 } else {
-					result[j].push({ name: _key, value: [ el.value ] });
+					if (hasValue(el)) {
+						result[j].push({ name: _key, value: [ el.value ] });
+					} else {
+						result[j].push({ name: _key, value: [ true ] });
+					}
 				}
             }
+		} else if (_type == 'radio') {
+			if (el.checked) {
+				if (hasValue(el)) {
+					result[j].push({ name: _key, value: el.value });
+				} else {
+					result[j].push({ name: _key, value: true });
+				}
+			}
         } else if (_tag == 'select') {
 			if (el.multiple) {
 				let temp = [];
@@ -303,10 +403,24 @@ const toArray = (selector, excludes) => {
 
     if (result.length == 0) {
         return [];
-    } else if (result.length == 1) {
-        return result[0];
-    }
-
+    } else {
+		if (checkboxes.length > 0) {
+			for (let item of checkboxes) {
+				if (item.count == 1) {
+					let e = result[item.form].find(x => x.name == item.key);
+					
+					if (e && e.value.length == 1) {
+						e.value = e.value[0];
+					}
+				}
+			}
+		}
+		
+		if (result.length == 1) {
+			return result[0];
+		}
+	}
+	
     return result;
 };
 const fromArray = (selector, obj, excludes) => {
@@ -344,9 +458,39 @@ const fromArray = (selector, obj, excludes) => {
                     if (isBool(value)) {
                         el.checked = value;
                     } else if (isArray(value)) {
-                        el.checked = value.indexOf(el.value) >= 0;
+						if (value.length == 1) {
+							if (hasValue(el)) {
+								el.checked = el.value == value[0];
+							} else {
+								el.checked = value[0];
+							}
+						} else {
+							if (hasValue(el)) {
+								el.checked = value.indexOf(el.value) >= 0;
+							} else {
+								if (_name && frm.querySelectorAll) {
+									const els = frm.querySelectorAll('[name="' + _name + '"]');
+									
+									if (els && els.length) {
+										for (let _i = 0; _i < els.length; _i++) {
+											if (els[_i] == el) {
+												if (value.length > _i) {
+													el.checked = value[_i];
+												}
+												
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
                     } else {
-                        el.checked = el.value == value;
+						if (hasValue(el)) {
+							el.checked = el.value == value;
+						} else {
+							el.checked = value;
+						}
                     }
                 } else if (_tag == 'select') {
 					if (el.multiple) {

@@ -47,7 +47,7 @@ var formEachElement = function formEachElement() {
           return x && x[0] == '.';
         });
 
-        excludes = function excludes(el) {
+        excludes = function excludes(frm, el) {
           if ((0, _locustjsExtensionsArray.contains)(arg, el.tagName)) {
             return true;
           }
@@ -59,8 +59,21 @@ var formEachElement = function formEachElement() {
             for (_iterator.s(); !(_step = _iterator.n()).done;) {
               var className = _step.value;
 
-              if ((el.className + ' ').indexOf(className.substr(1) + ' ')) {
-                return true;
+              var _iterator2 = _createForOfIteratorHelper(el.classList),
+                  _step2;
+
+              try {
+                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                  var elClassName = _step2.value;
+
+                  if (elClassName == className.substr(1)) {
+                    return true;
+                  }
+                }
+              } catch (err) {
+                _iterator2.e(err);
+              } finally {
+                _iterator2.f();
               }
             }
           } catch (err) {
@@ -126,6 +139,10 @@ var formEachElement = function formEachElement() {
         var elements = frm && frm.elements;
         var arr = [];
 
+        if ((0, _locustjsBase.isEmpty)(elements) || elements.length == 0) {
+          elements = frm.querySelectorAll('input, select, textarea');
+        }
+
         if (!(0, _locustjsBase.isEmpty)(elements) && elements.length) {
           for (var j = 0; j < elements.length; j++) {
             if (!hasExcludes || !excludes(frm, elements[j], j, i)) {
@@ -160,7 +177,7 @@ exports.isEditable = isEditable;
 
 var formEach = function formEach(selector, callback, excludes) {
   if (excludes == undefined) {
-    excludes = function excludes(el) {
+    excludes = function excludes(frm, el) {
       return !isEditable(el);
     };
   }
@@ -223,18 +240,18 @@ var clearForm = function clearForm(selector) {
       el.checked = false;
     } else if (type == 'select') {
       if (el.options && el.options.length) {
-        var _iterator2 = _createForOfIteratorHelper(el.options),
-            _step2;
+        var _iterator3 = _createForOfIteratorHelper(el.options),
+            _step3;
 
         try {
-          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-            var opt = _step2.value;
+          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+            var opt = _step3.value;
             opt.selected = false;
           }
         } catch (err) {
-          _iterator2.e(err);
+          _iterator3.e(err);
         } finally {
-          _iterator2.f();
+          _iterator3.f();
         }
       }
     } else if (type != 'hidden') {
@@ -245,8 +262,13 @@ var clearForm = function clearForm(selector) {
 
 exports.clearForm = clearForm;
 
+var hasValue = function hasValue(el) {
+  return el.value != null && el.value != '' && (!(el.type == 'checkbox' || el.type == 'radio') || el.value != 'on');
+};
+
 var _toJson = function toJson(selector, excludes) {
   var result = [];
+  var checkboxes = [];
   formEach(selector, function (frm, el, i, j) {
     if (result[j] == undefined) {
       result[j] = {};
@@ -270,8 +292,36 @@ var _toJson = function toJson(selector, excludes) {
         result[j][_key] = [];
       }
 
+      var item = checkboxes.find(function (x) {
+        return x.form == j && x.key == _key;
+      });
+
+      if (!item) {
+        checkboxes.push({
+          form: j,
+          key: _key,
+          count: 1
+        });
+      } else {
+        item.count++;
+      }
+
       if (el.checked) {
-        result[j][_key].push(el.value);
+        if (hasValue(el)) {
+          result[j][_key].push(el.value);
+        } else {
+          result[j][_key].push({
+            index: item.count
+          });
+        }
+      }
+    } else if (_type == 'radio') {
+      if (el.checked) {
+        if (hasValue(el)) {
+          result[j][_key] = el.value;
+        } else {
+          result[j][_key] = true;
+        }
       }
     } else if (_tag == 'select') {
       if (el.multiple) {
@@ -283,6 +333,8 @@ var _toJson = function toJson(selector, excludes) {
       } else {
         result[j][_key] = el.options[el.selectedIndex].value;
       }
+    } else if (_tag == 'button') {
+      result[j][_key] = el.innerText;
     } else {
       result[j][_key] = el.value;
     }
@@ -290,8 +342,29 @@ var _toJson = function toJson(selector, excludes) {
 
   if (result.length == 0) {
     return {};
-  } else if (result.length == 1) {
-    return result[0];
+  } else {
+    if (checkboxes.length > 0) {
+      var _iterator4 = _createForOfIteratorHelper(checkboxes),
+          _step4;
+
+      try {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var item = _step4.value;
+
+          if (item.count == 1 && result[item.form][item.key].length == 1) {
+            result[item.form][item.key] = result[item.form][item.key][0];
+          }
+        }
+      } catch (err) {
+        _iterator4.e(err);
+      } finally {
+        _iterator4.f();
+      }
+    }
+
+    if (result.length == 1) {
+      result = result[0];
+    }
   }
 
   return result;
@@ -301,6 +374,7 @@ exports.toJson = _toJson;
 
 var _fromJson = function fromJson(selector, obj, excludes) {
   if ((0, _locustjsBase.isSomeObject)(obj) || (0, _locustjsBase.isArray)(obj)) {
+    var checkboxes = [];
     formEach(selector, function (frm, el, i, j) {
       var _type = (el.type || '').toLowerCase();
 
@@ -320,12 +394,58 @@ var _fromJson = function fromJson(selector, obj, excludes) {
 
       if (value != null) {
         if (_type == 'checkbox' || _type == 'radio') {
+          var item = checkboxes.find(function (x) {
+            return x.form == j && x.key == _key;
+          });
+
+          if (!item) {
+            checkboxes.push({
+              form: j,
+              key: _key,
+              count: 1
+            });
+          } else {
+            item.count++;
+          }
+
           if ((0, _locustjsBase.isBool)(value)) {
             el.checked = value;
           } else if ((0, _locustjsBase.isArray)(value)) {
-            el.checked = value.indexOf(el.value) >= 0;
+            if (value.length == 1) {
+              if ((0, _locustjsBase.isObject)(value[0])) {
+                el.checked = item.count == value[0].index;
+              } else {
+                if (hasValue(el)) {
+                  el.checked = el.value == value[0];
+                } else {
+                  el.checked = value[0];
+                }
+              }
+            } else {
+              if (hasValue(el)) {
+                el.checked = value.indexOf(el.value) >= 0 || value.filter(function (x) {
+                  return (0, _locustjsBase.isObject)(x);
+                }).find(function (x) {
+                  return x.index == item.count;
+                }) != undefined;
+              } else {
+                el.checked = value.filter(function (x) {
+                  return (0, _locustjsBase.isObject)(x);
+                }).find(function (x) {
+                  return x.index == item.count;
+                }) != undefined;
+              }
+            }
           } else {
-            el.checked = el.value == value;
+            if ((0, _locustjsBase.isObject)(value)) {
+              el.checked = item.count == value.index;
+            } else {
+              if (hasValue(el)) {
+                el.checked = el.value == value;
+              } else {
+                el.checked = value;
+              }
+            }
           }
         } else if (_tag == 'select') {
           if (el.multiple) {
@@ -351,6 +471,7 @@ exports.fromJson = _fromJson;
 
 var _toArray = function toArray(selector, excludes) {
   var result = [];
+  var checkboxes = [];
   formEach(selector, function (frm, el, i, j) {
     if (result[j] == undefined) {
       result[j] = [];
@@ -370,6 +491,20 @@ var _toArray = function toArray(selector, excludes) {
     }
 
     if (_type == 'checkbox') {
+      var item = checkboxes.find(function (x) {
+        return x.form == j && x.key == _key;
+      });
+
+      if (!item) {
+        checkboxes.push({
+          form: j,
+          key: _key,
+          count: 1
+        });
+      } else {
+        item.count++;
+      }
+
       var index = -1;
       var arr;
 
@@ -386,11 +521,36 @@ var _toArray = function toArray(selector, excludes) {
 
       if (el.checked) {
         if (arr) {
-          arr.push(el.value);
+          if (hasValue(el)) {
+            arr.push(el.value);
+          } else {
+            arr.push(true);
+          }
+        } else {
+          if (hasValue(el)) {
+            result[j].push({
+              name: _key,
+              value: [el.value]
+            });
+          } else {
+            result[j].push({
+              name: _key,
+              value: [true]
+            });
+          }
+        }
+      }
+    } else if (_type == 'radio') {
+      if (el.checked) {
+        if (hasValue(el)) {
+          result[j].push({
+            name: _key,
+            value: el.value
+          });
         } else {
           result[j].push({
             name: _key,
-            value: [el.value]
+            value: true
           });
         }
       }
@@ -422,8 +582,39 @@ var _toArray = function toArray(selector, excludes) {
 
   if (result.length == 0) {
     return [];
-  } else if (result.length == 1) {
-    return result[0];
+  } else {
+    if (checkboxes.length > 0) {
+      var _iterator5 = _createForOfIteratorHelper(checkboxes),
+          _step5;
+
+      try {
+        var _loop = function _loop() {
+          var item = _step5.value;
+
+          if (item.count == 1) {
+            var e = result[item.form].find(function (x) {
+              return x.name == item.key;
+            });
+
+            if (e && e.value.length == 1) {
+              e.value = e.value[0];
+            }
+          }
+        };
+
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          _loop();
+        }
+      } catch (err) {
+        _iterator5.e(err);
+      } finally {
+        _iterator5.f();
+      }
+    }
+
+    if (result.length == 1) {
+      return result[0];
+    }
   }
 
   return result;
@@ -471,9 +662,39 @@ var _fromArray = function fromArray(selector, obj, excludes) {
           if ((0, _locustjsBase.isBool)(value)) {
             el.checked = value;
           } else if ((0, _locustjsBase.isArray)(value)) {
-            el.checked = value.indexOf(el.value) >= 0;
+            if (value.length == 1) {
+              if (hasValue(el)) {
+                el.checked = el.value == value[0];
+              } else {
+                el.checked = value[0];
+              }
+            } else {
+              if (hasValue(el)) {
+                el.checked = value.indexOf(el.value) >= 0;
+              } else {
+                if (_name && frm.querySelectorAll) {
+                  var els = frm.querySelectorAll('[name="' + _name + '"]');
+
+                  if (els && els.length) {
+                    for (var _i = 0; _i < els.length; _i++) {
+                      if (els[_i] == el) {
+                        if (value.length > _i) {
+                          el.checked = value[_i];
+                        }
+
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
           } else {
-            el.checked = el.value == value;
+            if (hasValue(el)) {
+              el.checked = el.value == value;
+            } else {
+              el.checked = value;
+            }
           }
         } else if (_tag == 'select') {
           if (el.multiple) {
@@ -531,8 +752,8 @@ var post = function post() {
     }
 
     if ((0, _locustjsBase.isSomeObject)(options.args)) {
-      for (var _i = 0, _Object$keys = Object.keys(options.args); _i < _Object$keys.length; _i++) {
-        var key = _Object$keys[_i];
+      for (var _i2 = 0, _Object$keys = Object.keys(options.args); _i2 < _Object$keys.length; _i2++) {
+        var key = _Object$keys[_i2];
         var input = document.createElement('input');
         input.type = 'hidden';
         input.name = key;
