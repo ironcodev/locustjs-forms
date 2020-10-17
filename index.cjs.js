@@ -263,7 +263,15 @@ var clearForm = function clearForm(selector) {
 exports.clearForm = clearForm;
 
 var hasValue = function hasValue(el) {
-  return el.value != null && el.value != '' && (!(el.type == 'checkbox' || el.type == 'radio') || el.value != 'on');
+  var attrs = el.attributes;
+
+  for (var i = 0; i < attrs.length; i++) {
+    if (attrs[i].name.toLowerCase() == 'value') {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 var _toJson = function toJson(selector, excludes) {
@@ -311,9 +319,11 @@ var _toJson = function toJson(selector, excludes) {
         if (hasValue(el)) {
           result[j][_key].push(el.value);
         } else {
-          result[j][_key].push({
-            index: item.count
-          });
+          result[j][_key].push(true);
+        }
+      } else {
+        if (!hasValue(el)) {
+          result[j][_key].push(false);
         }
       }
     } else if (_type == 'radio') {
@@ -356,7 +366,7 @@ var _toJson = function toJson(selector, excludes) {
             if (result[item.form][item.key].length == 1) {
               result[item.form][item.key] = result[item.form][item.key][0];
             } else {
-              delete result[item.form][item.key];
+              result[item.form][item.key] = false;
             }
           }
         }
@@ -418,39 +428,23 @@ var _fromJson = function fromJson(selector, obj, excludes) {
             el.checked = value;
           } else if ((0, _locustjsBase.isArray)(value)) {
             if (value.length == 1) {
-              if ((0, _locustjsBase.isObject)(value[0])) {
-                el.checked = item.count == value[0].index;
+              if (hasValue(el)) {
+                el.checked = el.value == value[0];
               } else {
-                if (hasValue(el)) {
-                  el.checked = el.value == value[0];
-                } else {
-                  el.checked = value[0];
-                }
+                el.checked = value[0];
               }
             } else {
               if (hasValue(el)) {
-                el.checked = value.indexOf(el.value) >= 0 || value.filter(function (x) {
-                  return (0, _locustjsBase.isObject)(x);
-                }).find(function (x) {
-                  return x.index == item.count;
-                }) != undefined;
+                el.checked = value.indexOf(el.value) >= 0;
               } else {
-                el.checked = value.filter(function (x) {
-                  return (0, _locustjsBase.isObject)(x);
-                }).find(function (x) {
-                  return x.index == item.count;
-                }) != undefined;
+                el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
               }
             }
           } else {
-            if ((0, _locustjsBase.isObject)(value)) {
-              el.checked = item.count == value.index;
+            if (hasValue(el)) {
+              el.checked = el.value == value;
             } else {
-              if (hasValue(el)) {
-                el.checked = el.value == value;
-              } else {
-                el.checked = value;
-              }
+              el.checked = value;
             }
           }
         } else if (_tag == 'select') {

@@ -157,7 +157,17 @@ const clearForm = (selector) => formEach(selector, (frm, el, i) => {
     }
 });
 
-const hasValue = el => el.value != null && el.value != '' && (!(el.type == 'checkbox' || el.type == 'radio') || el.value != 'on');
+const hasValue = el => {
+	const attrs = el.attributes;
+	
+	for (let i = 0; i < attrs.length; i++) {
+		if (attrs[i].name.toLowerCase() == 'value') {
+			return true;
+		}
+	}
+	
+	return false;
+}
 
 const toJson = (selector, excludes) => {
     let result = [];
@@ -197,7 +207,11 @@ const toJson = (selector, excludes) => {
 				if (hasValue(el)) {
 					result[j][_key].push(el.value);
 				} else {
-					result[j][_key].push({ index: item.count });
+					result[j][_key].push(true);
+				}
+			} else {
+				if (!hasValue(el)) {
+					result[j][_key].push(false);
 				}
 			}
 		} else if (_type == 'radio') {
@@ -234,7 +248,7 @@ const toJson = (selector, excludes) => {
 					if (result[item.form][item.key].length == 1) {
 						result[item.form][item.key] = result[item.form][item.key][0];
 					} else {
-						delete result[item.form][item.key];
+						result[item.form][item.key] = false;
 					}
 				}
 			}
@@ -281,31 +295,23 @@ const fromJson = (selector, obj, excludes) => {
                         el.checked = value;
                     } else if (isArray(value)) {
 						if (value.length == 1) {
-							if (isObject(value[0])) {
-								el.checked = item.count == value[0].index;
+							if (hasValue(el)) {
+								el.checked = el.value == value[0];
 							} else {
-								if (hasValue(el)) {
-									el.checked = el.value == value[0];
-								} else {
-									el.checked = value[0];
-								}
+								el.checked = value[0];
 							}
 						} else {
 							if (hasValue(el)) {
-								el.checked = value.indexOf(el.value) >= 0 || (value.filter(x => isObject(x)).find(x => x.index == item.count) != undefined);
+								el.checked = value.indexOf(el.value) >= 0;
 							} else {
-								el.checked = (value.filter(x => isObject(x)).find(x => x.index == item.count) != undefined);
+								el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
 							}
 						}
                     } else {
-						if (isObject(value)) {
-							el.checked = item.count == value.index;
+						if (hasValue(el)) {
+							el.checked = el.value == value;
 						} else {
-							if (hasValue(el)) {
-								el.checked = el.value == value;
-							} else {
-								el.checked = value;
-							}
+							el.checked = value;
 						}
                     }
                 } else if (_tag == 'select') {
