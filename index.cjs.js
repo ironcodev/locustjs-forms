@@ -297,11 +297,12 @@ var _toJson = function toJson(selector, excludes) {
       });
 
       if (!item) {
-        checkboxes.push({
+        item = {
           form: j,
           key: _key,
           count: 1
-        });
+        };
+        checkboxes.push(item);
       } else {
         item.count++;
       }
@@ -351,8 +352,12 @@ var _toJson = function toJson(selector, excludes) {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var item = _step4.value;
 
-          if (item.count == 1 && result[item.form][item.key].length == 1) {
-            result[item.form][item.key] = result[item.form][item.key][0];
+          if (item.count == 1) {
+            if (result[item.form][item.key].length == 1) {
+              result[item.form][item.key] = result[item.form][item.key][0];
+            } else {
+              delete result[item.form][item.key];
+            }
           }
         }
       } catch (err) {
@@ -399,11 +404,12 @@ var _fromJson = function fromJson(selector, obj, excludes) {
           });
 
           if (!item) {
-            checkboxes.push({
+            item = {
               form: j,
               key: _key,
               count: 1
-            });
+            };
+            checkboxes.push(item);
           } else {
             item.count++;
           }
@@ -496,11 +502,12 @@ var _toArray = function toArray(selector, excludes) {
       });
 
       if (!item) {
-        checkboxes.push({
+        item = {
           form: j,
           key: _key,
           count: 1
-        });
+        };
+        checkboxes.push(item);
       } else {
         item.count++;
       }

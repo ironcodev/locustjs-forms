@@ -186,7 +186,9 @@ const toJson = (selector, excludes) => {
 			let item = checkboxes.find(x => x.form == j && x.key == _key);
 			
 			if (!item) {
-				checkboxes.push({ form: j, key: _key, count: 1 });
+				item = { form: j, key: _key, count: 1 };
+				
+				checkboxes.push(item);
 			} else {
 				item.count++;
 			}
@@ -228,8 +230,12 @@ const toJson = (selector, excludes) => {
     } else {
 		if (checkboxes.length > 0) {
 			for (let item of checkboxes) {
-				if (item.count == 1 && result[item.form][item.key].length == 1) {
-					result[item.form][item.key] = result[item.form][item.key][0];
+				if (item.count == 1) {
+					if (result[item.form][item.key].length == 1) {
+						result[item.form][item.key] = result[item.form][item.key][0];
+					} else {
+						delete result[item.form][item.key];
+					}
 				}
 			}
 		}
@@ -264,7 +270,9 @@ const fromJson = (selector, obj, excludes) => {
 					let item = checkboxes.find(x => x.form == j && x.key == _key);
 			
 					if (!item) {
-						checkboxes.push({ form: j, key: _key, count: 1 });
+						item = { form: j, key: _key, count: 1 };
+						
+						checkboxes.push(item);
 					} else {
 						item.count++;
 					}
@@ -342,7 +350,9 @@ const toArray = (selector, excludes) => {
 			let item = checkboxes.find(x => x.form == j && x.key == _key);
 					
 			if (!item) {
-				checkboxes.push({ form: j, key: _key, count: 1 });
+				item = { form: j, key: _key, count: 1 };
+				
+				checkboxes.push(item);
 			} else {
 				item.count++;
 			}
