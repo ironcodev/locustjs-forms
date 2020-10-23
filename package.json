@@ -1,6 +1,6 @@
 {
   "name": "locustjs-forms",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "This library provides utility functions to interact with forms and form elements in a web page.",
   "main": "index.cjs.js",
   "module": "index.esm.js",
@@ -11,8 +11,14 @@
     "type": "git",
     "url": "git+https://github.com/ironcodev/locustjs-forms.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "locustjs",
+    "javascript",
+    "form",
+    "tojson",
+    "json"
+  ],
+  "author": "Iron Code",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ironcodev/locustjs-forms/issues"
@@ -20,6 +26,7 @@
   "homepage": "https://github.com/ironcodev/locustjs-forms#readme",
   "dependencies": {
     "locustjs-base": "^1.0.7",
-    "locustjs-extensions-array": "^1.0.11"
+    "locustjs-extensions-array": "^1.0.11",
+    "locustjs-extensions-object": "^1.0.13"
   }
 }

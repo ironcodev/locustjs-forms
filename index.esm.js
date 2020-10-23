@@ -1,5 +1,6 @@
 import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBool } from 'locustjs-base';
 import { contains } from 'locustjs-extensions-array';
+import { flatten, expand } from 'locustjs-extensions-object';
 
 const formEachElement = function () {
 	let selector = 'form';
@@ -128,7 +129,7 @@ const isEditable = el => {
 }
 
 const formEach = (selector, callback, excludes) => {
-	if (excludes == undefined) {
+	if (excludes == null) {
 		excludes = (frm, el) => !isEditable(el);
 	}
 	
@@ -169,7 +170,7 @@ const hasValue = el => {
 	return false;
 }
 
-const toJson = (selector, excludes) => {
+const toJson = (selector, excludes, expandNames) => {
     let result = [];
 	let checkboxes = [];
 	
@@ -254,6 +255,10 @@ const toJson = (selector, excludes) => {
 			}
 		}
 		
+		if (expandNames) {
+			result = expand(result);
+		}
+		
 		if (result.length == 1) {
 			result = result[0];
 		}
@@ -261,7 +266,7 @@ const toJson = (selector, excludes) => {
 	
 	return result;
 };
-const fromJson = (selector, obj, excludes) => {
+const fromJson = (selector, obj, excludes, flattenProps) => {
     if (isSomeObject(obj) || isArray(obj)) {
 		let checkboxes = [];
 		
@@ -276,59 +281,87 @@ const fromJson = (selector, obj, excludes) => {
                 _key = i;
             }
 
-            let data = isArray(obj) ? obj[j]: obj;
-            let value = data[_key];
+            let form = isArray(obj) ? obj[j]: obj;
+			
+			if (flattenProps) {
+				form = flatten(form)
+			}
+			
+            let value = form && form[_key];
 
             if (value != null) {
-                if ((_type == 'checkbox' || _type == 'radio')) {
-					let item = checkboxes.find(x => x.form == j && x.key == _key);
-			
-					if (!item) {
-						item = { form: j, key: _key, count: 1 };
+				if (isSomeObject(value) && isSomeString(_key)) {
+					let dotIndex = _key.indexOf('.');
+					let prevIndex = 0;
+					let prevObj = value;
+					
+					while (dotIndex >= 0) {
+						let subKey = _key.substring(prevIndex, dotIndex);
 						
-						checkboxes.push(item);
-					} else {
-						item.count++;
+						if (!prevObj[subKey]) {
+							prevObj = null;
+							break;
+						}
+						
+						prevIndex = dotIndex + 1;
+						prevObj = prevObj[subKey];
+						dotIndex = _key.indexOf('.', dotIndex + 1);
 					}
 					
-                    if (isBool(value)) {
-                        el.checked = value;
-                    } else if (isArray(value)) {
-						if (value.length == 1) {
-							if (hasValue(el)) {
-								el.checked = el.value == value[0];
-							} else {
-								el.checked = value[0];
-							}
+					value = prevObj ? prevObj[_key.substr(prevIndex)] : null;
+				}
+				
+				if (value != null) {
+					if ((_type == 'checkbox' || _type == 'radio')) {
+						let item = checkboxes.find(x => x.form == j && x.key == _key);
+				
+						if (!item) {
+							item = { form: j, key: _key, count: 1 };
+							
+							checkboxes.push(item);
 						} else {
-							if (hasValue(el)) {
-								el.checked = value.indexOf(el.value) >= 0;
-							} else {
-								el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
-							}
+							item.count++;
 						}
-                    } else {
-						if (hasValue(el)) {
-							el.checked = el.value == value;
-						} else {
+						
+						if (isBool(value)) {
 							el.checked = value;
+						} else if (isArray(value)) {
+							if (value.length == 1) {
+								if (hasValue(el)) {
+									el.checked = el.value == value[0];
+								} else {
+									el.checked = value[0];
+								}
+							} else {
+								if (hasValue(el)) {
+									el.checked = value.indexOf(el.value) >= 0;
+								} else {
+									el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
+								}
+							}
+						} else {
+							if (hasValue(el)) {
+								el.checked = el.value == value;
+							} else {
+								el.checked = value;
+							}
 						}
-                    }
-                } else if (_tag == 'select') {
-					if (el.multiple) {
-						if (isArray(value)) {
-							for (let ii = 0; ii < el.options.length; ii++) {
-								el.options[ii].selected = contains(value, el.options[ii].value);
+					} else if (_tag == 'select') {
+						if (el.multiple) {
+							if (isArray(value)) {
+								for (let ii = 0; ii < el.options.length; ii++) {
+									el.options[ii].selected = contains(value, el.options[ii].value);
+								}
+							} else {
+								el.selectedIndex = value;
 							}
 						} else {
 							el.selectedIndex = value;
 						}
 					} else {
-						el.selectedIndex = value;
+						el.value = value;
 					}
-                } else {
-                    el.value = value;
-                }
+				}
             }
         }, excludes);
     }

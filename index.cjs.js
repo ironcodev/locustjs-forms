@@ -9,6 +9,8 @@ var _locustjsBase = require("locustjs-base");
 
 var _locustjsExtensionsArray = require("locustjs-extensions-array");
 
+var _locustjsExtensionsObject = require("locustjs-extensions-object");
+
 function _instanceof(left, right) { if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) { return !!right[Symbol.hasInstance](left); } else { return left instanceof right; } }
 
 function _classCallCheck(instance, Constructor) { if (!_instanceof(instance, Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -176,7 +178,7 @@ var isEditable = function isEditable(el) {
 exports.isEditable = isEditable;
 
 var formEach = function formEach(selector, callback, excludes) {
-  if (excludes == undefined) {
+  if (excludes == null) {
     excludes = function excludes(frm, el) {
       return !isEditable(el);
     };
@@ -274,7 +276,7 @@ var hasValue = function hasValue(el) {
   return false;
 };
 
-var _toJson = function toJson(selector, excludes) {
+var _toJson = function toJson(selector, excludes, expandNames) {
   var result = [];
   var checkboxes = [];
   formEach(selector, function (frm, el, i, j) {
@@ -377,6 +379,10 @@ var _toJson = function toJson(selector, excludes) {
       }
     }
 
+    if (expandNames) {
+      result = (0, _locustjsExtensionsObject.expand)(result);
+    }
+
     if (result.length == 1) {
       result = result[0];
     }
@@ -387,7 +393,7 @@ var _toJson = function toJson(selector, excludes) {
 
 exports.toJson = _toJson;
 
-var _fromJson = function fromJson(selector, obj, excludes) {
+var _fromJson = function fromJson(selector, obj, excludes, flattenProps) {
   if ((0, _locustjsBase.isSomeObject)(obj) || (0, _locustjsBase.isArray)(obj)) {
     var checkboxes = [];
     formEach(selector, function (frm, el, i, j) {
@@ -404,63 +410,92 @@ var _fromJson = function fromJson(selector, obj, excludes) {
         _key = i;
       }
 
-      var data = (0, _locustjsBase.isArray)(obj) ? obj[j] : obj;
-      var value = data[_key];
+      var form = (0, _locustjsBase.isArray)(obj) ? obj[j] : obj;
+
+      if (flattenProps) {
+        form = (0, _locustjsExtensionsObject.flatten)(form);
+      }
+
+      var value = form && form[_key];
 
       if (value != null) {
-        if (_type == 'checkbox' || _type == 'radio') {
-          var item = checkboxes.find(function (x) {
-            return x.form == j && x.key == _key;
-          });
+        if ((0, _locustjsBase.isSomeObject)(value) && (0, _locustjsBase.isSomeString)(_key)) {
+          var dotIndex = _key.indexOf('.');
 
-          if (!item) {
-            item = {
-              form: j,
-              key: _key,
-              count: 1
-            };
-            checkboxes.push(item);
-          } else {
-            item.count++;
+          var prevIndex = 0;
+          var prevObj = value;
+
+          while (dotIndex >= 0) {
+            var subKey = _key.substring(prevIndex, dotIndex);
+
+            if (!prevObj[subKey]) {
+              prevObj = null;
+              break;
+            }
+
+            prevIndex = dotIndex + 1;
+            prevObj = prevObj[subKey];
+            dotIndex = _key.indexOf('.', dotIndex + 1);
           }
 
-          if ((0, _locustjsBase.isBool)(value)) {
-            el.checked = value;
-          } else if ((0, _locustjsBase.isArray)(value)) {
-            if (value.length == 1) {
-              if (hasValue(el)) {
-                el.checked = el.value == value[0];
-              } else {
-                el.checked = value[0];
-              }
+          value = prevObj ? prevObj[_key.substr(prevIndex)] : null;
+        }
+
+        if (value != null) {
+          if (_type == 'checkbox' || _type == 'radio') {
+            var item = checkboxes.find(function (x) {
+              return x.form == j && x.key == _key;
+            });
+
+            if (!item) {
+              item = {
+                form: j,
+                key: _key,
+                count: 1
+              };
+              checkboxes.push(item);
             } else {
-              if (hasValue(el)) {
-                el.checked = value.indexOf(el.value) >= 0;
-              } else {
-                el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
-              }
+              item.count++;
             }
-          } else {
-            if (hasValue(el)) {
-              el.checked = el.value == value;
-            } else {
+
+            if ((0, _locustjsBase.isBool)(value)) {
               el.checked = value;
+            } else if ((0, _locustjsBase.isArray)(value)) {
+              if (value.length == 1) {
+                if (hasValue(el)) {
+                  el.checked = el.value == value[0];
+                } else {
+                  el.checked = value[0];
+                }
+              } else {
+                if (hasValue(el)) {
+                  el.checked = value.indexOf(el.value) >= 0;
+                } else {
+                  el.checked = item.count > 0 && item.count <= value.length && value[item.count - 1];
+                }
+              }
+            } else {
+              if (hasValue(el)) {
+                el.checked = el.value == value;
+              } else {
+                el.checked = value;
+              }
             }
-          }
-        } else if (_tag == 'select') {
-          if (el.multiple) {
-            if ((0, _locustjsBase.isArray)(value)) {
-              for (var ii = 0; ii < el.options.length; ii++) {
-                el.options[ii].selected = (0, _locustjsExtensionsArray.contains)(value, el.options[ii].value);
+          } else if (_tag == 'select') {
+            if (el.multiple) {
+              if ((0, _locustjsBase.isArray)(value)) {
+                for (var ii = 0; ii < el.options.length; ii++) {
+                  el.options[ii].selected = (0, _locustjsExtensionsArray.contains)(value, el.options[ii].value);
+                }
+              } else {
+                el.selectedIndex = value;
               }
             } else {
               el.selectedIndex = value;
             }
           } else {
-            el.selectedIndex = value;
+            el.value = value;
           }
-        } else {
-          el.value = value;
         }
       }
     }, excludes);
