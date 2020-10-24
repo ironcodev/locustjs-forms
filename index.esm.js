@@ -353,10 +353,14 @@ const fromJson = (selector, obj, excludes, flattenProps) => {
 									el.options[ii].selected = contains(value, el.options[ii].value);
 								}
 							} else {
-								el.selectedIndex = value;
+								for (let ii = 0; ii < el.options.length; ii++) {
+									el.options[ii].selected = el.options[ii].value == value || ii === value;
+								}
 							}
 						} else {
-							el.selectedIndex = value;
+							for (let ii = 0; ii < el.options.length; ii++) {
+								el.options[ii].selected = el.options[ii].value == value || ii === value;
+							}
 						}
 					} else {
 						el.value = value;
@@ -548,10 +552,14 @@ const fromArray = (selector, obj, excludes) => {
 								el.options[ii].selected = contains(value, el.options[ii].value);
 							}
 						} else {
-							el.selectedIndex = value;
+							for (let ii = 0; ii < el.options.length; ii++) {
+								el.options[ii].selected = el.options[ii].value == value || ii === value;
+							}
 						}
 					} else {
-						el.selectedIndex = value;
+						for (let ii = 0; ii < el.options.length; ii++) {
+							el.options[ii].selected = el.options[ii].value == value || ii === value;
+						}
 					}
                 } else {
                     el.value = value;
@@ -631,10 +639,10 @@ const getValue = (form, key) => {
 	
 	if (isSomeString(form)) {
 		frm = document.querySelector(form);
+	} else if (isArray(form)) {
+		frm = form.length ? form[0]: null;
 	} else if (isSomeObject(form)) {
 		frm = form.context ? form[0]: form;
-	} else if (isArray(form) && form.length) {
-		frm = form[0];
 	}
 	
 	if (!isEmpty(frm) && isSomeString(key) && frm.elements && frm.elements.length) {
@@ -668,7 +676,9 @@ const getValue = (form, key) => {
 					if (el.multiple) {
 						result.push(subResult);
 					} else {
-						result.push(subResult[0]);
+						if (subResult.length) {
+							result.push(subResult[0]);
+						}
 					}
 				} else {
 					result.push(el.value);
@@ -714,10 +724,10 @@ const setValue = (form, key, value) => {
 					if (isArray(value)) {
 						el.checked = contains(value, el.value);
 					} else {
-						el.checked = el.value.toLowerCase() == _value;
+						el.checked = isBool(value) ? value : el.value.toLowerCase() == _value;
 					}
 				} else if (type == 'radio') {
-					el.checked = el.value.toLowerCase() == _value;
+					el.checked = isBool(value) ? value : el.value.toLowerCase() == _value;
 				} else if (tag == 'select') {
 					for (let j = 0; j < el.options.length; j++) {
 						let opt = el.options[j];
@@ -725,7 +735,7 @@ const setValue = (form, key, value) => {
 						if (isArray(value)) {
 							opt.selected = contains(value, opt.value) || value.indexOf(j) >= 0;
 						} else {
-							opt.selected = opt.value.toLowerCase() == _value;
+							opt.selected = opt.value == _value || j === value;
 						}
 					}
 				} else {

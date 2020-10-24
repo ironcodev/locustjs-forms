@@ -488,10 +488,14 @@ var _fromJson = function fromJson(selector, obj, excludes, flattenProps) {
                   el.options[ii].selected = (0, _locustjsExtensionsArray.contains)(value, el.options[ii].value);
                 }
               } else {
-                el.selectedIndex = value;
+                for (var _ii = 0; _ii < el.options.length; _ii++) {
+                  el.options[_ii].selected = el.options[_ii].value == value || _ii === value;
+                }
               }
             } else {
-              el.selectedIndex = value;
+              for (var _ii2 = 0; _ii2 < el.options.length; _ii2++) {
+                el.options[_ii2].selected = el.options[_ii2].value == value || _ii2 === value;
+              }
             }
           } else {
             el.value = value;
@@ -594,8 +598,8 @@ var _toArray = function toArray(selector, excludes) {
       if (el.multiple) {
         var temp = [];
 
-        for (var _ii = 0; _ii < el.selectedOptions.length; _ii++) {
-          temp.push(el.selectedOptions[_ii].value);
+        for (var _ii3 = 0; _ii3 < el.selectedOptions.length; _ii3++) {
+          temp.push(el.selectedOptions[_ii3].value);
         }
 
         result[j].push({
@@ -739,10 +743,14 @@ var _fromArray = function fromArray(selector, obj, excludes) {
                 el.options[ii].selected = (0, _locustjsExtensionsArray.contains)(value, el.options[ii].value);
               }
             } else {
-              el.selectedIndex = value;
+              for (var _ii4 = 0; _ii4 < el.options.length; _ii4++) {
+                el.options[_ii4].selected = el.options[_ii4].value == value || _ii4 === value;
+              }
             }
           } else {
-            el.selectedIndex = value;
+            for (var _ii5 = 0; _ii5 < el.options.length; _ii5++) {
+              el.options[_ii5].selected = el.options[_ii5].value == value || _ii5 === value;
+            }
           }
         } else {
           el.value = value;
@@ -822,10 +830,10 @@ var _getValue = function getValue(form, key) {
 
   if ((0, _locustjsBase.isSomeString)(form)) {
     frm = document.querySelector(form);
+  } else if ((0, _locustjsBase.isArray)(form)) {
+    frm = form.length ? form[0] : null;
   } else if ((0, _locustjsBase.isSomeObject)(form)) {
     frm = form.context ? form[0] : form;
-  } else if ((0, _locustjsBase.isArray)(form) && form.length) {
-    frm = form[0];
   }
 
   if (!(0, _locustjsBase.isEmpty)(frm) && (0, _locustjsBase.isSomeString)(key) && frm.elements && frm.elements.length) {
@@ -858,7 +866,9 @@ var _getValue = function getValue(form, key) {
           if (el.multiple) {
             result.push(subResult);
           } else {
-            result.push(subResult[0]);
+            if (subResult.length) {
+              result.push(subResult[0]);
+            }
           }
         } else {
           result.push(el.value);
@@ -905,10 +915,10 @@ var _setValue = function setValue(form, key, value) {
           if ((0, _locustjsBase.isArray)(value)) {
             el.checked = (0, _locustjsExtensionsArray.contains)(value, el.value);
           } else {
-            el.checked = el.value.toLowerCase() == _value;
+            el.checked = (0, _locustjsBase.isBool)(value) ? value : el.value.toLowerCase() == _value;
           }
         } else if (type == 'radio') {
-          el.checked = el.value.toLowerCase() == _value;
+          el.checked = (0, _locustjsBase.isBool)(value) ? value : el.value.toLowerCase() == _value;
         } else if (tag == 'select') {
           for (var j = 0; j < el.options.length; j++) {
             var opt = el.options[j];
@@ -916,7 +926,7 @@ var _setValue = function setValue(form, key, value) {
             if ((0, _locustjsBase.isArray)(value)) {
               opt.selected = (0, _locustjsExtensionsArray.contains)(value, opt.value) || value.indexOf(j) >= 0;
             } else {
-              opt.selected = opt.value.toLowerCase() == _value;
+              opt.selected = opt.value == _value || j === value;
             }
           }
         } else {
