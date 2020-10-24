@@ -1,6 +1,6 @@
 {
   "name": "locustjs-forms",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "This library provides utility functions to interact with forms and form elements in a web page.",
   "main": "index.cjs.js",
   "module": "index.esm.js",
@@ -27,6 +27,6 @@
   "dependencies": {
     "locustjs-base": "^1.0.7",
     "locustjs-extensions-array": "^1.0.11",
-    "locustjs-extensions-object": "^1.0.13"
+    "locustjs-extensions-object": "^1.0.15"
   }
 }
