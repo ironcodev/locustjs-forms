@@ -231,7 +231,11 @@ const toJson = (selector, excludes, expandNames) => {
 					result[j][_key].push(el.selectedOptions[ii].value);
 				}
 			} else {
-				result[j][_key] = el.options[el.selectedIndex].value;
+				if (el.selectedIndex >= 0 && el.selectedIndex < el.options.length) {
+					result[j][_key] = el.options[el.selectedIndex] ? el.options[el.selectedIndex].value: undefined;
+				} else {
+					result[j][_key] = undefined;
+				}
 			}
         } else if (_tag == 'button') {
 			result[j][_key] = el.innerText;
@@ -447,7 +451,11 @@ const toArray = (selector, excludes) => {
 				
 				result[j].push({ name: _key, value: temp });
 			} else {
-				result[j].push({ name: _key, value: el.options[el.selectedIndex].value });
+				if (el.selectedIndex >= 0 && el.selectedIndex < el.options.length) {
+					result[j].push({ name: _key, value: el.options[el.selectedIndex] ? el.options[el.selectedIndex].value: undefined });
+				} else {
+					result[j].push({ name: _key, value: undefined });
+				}
 			}
         } else {
             result[j].push({ name: _key, value: el.value });
