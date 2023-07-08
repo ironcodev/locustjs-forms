@@ -1,10 +1,11 @@
 {
-  "name": "locustjs-forms",
-  "version": "1.0.10",
+  "name": "@locustjs/forms",
+  "version": "2.0.0",
   "description": "This library provides utility functions to interact with forms and form elements in a web page.",
   "main": "index.cjs.js",
   "module": "index.esm.js",
   "scripts": {
+    "build": "babel index.esm.js -o index.cjs.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,8 +26,12 @@
   },
   "homepage": "https://github.com/ironcodev/locustjs-forms#readme",
   "dependencies": {
-    "locustjs-base": "^1.0.7",
-    "locustjs-extensions-array": "^1.0.11",
-    "locustjs-extensions-object": "^1.0.16"
+    "@locustjs/base": "^2.1.0",
+    "@locustjs/extensions-array": "^2.0.0",
+    "@locustjs/extensions-object": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.22.6",
+    "@babel/core": "^7.22.8"
   }
 }

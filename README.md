@@ -1,5 +1,22 @@
-# locustjs-forms
+# About
 This library provides utility functions to interact with forms and form elements in a web page.
+
+# Install
+```
+npm i @locustjs/forms
+```
+
+# Usage
+
+CommonJs
+```javascript
+var someFn = require('@locustjs/forms').someFn;
+```
+
+ES6
+```javascript
+import { someFn } from '@locustjs/forms'
+```
 
 ## Converting an HTML form into JSON
 example

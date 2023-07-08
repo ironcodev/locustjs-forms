@@ -1,6 +1,6 @@
-import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBool } from 'locustjs-base';
-import { contains } from 'locustjs-extensions-array';
-import { flatten, expand } from 'locustjs-extensions-object';
+import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBool } from '@locustjs/base';
+import { contains } from '@locustjs/extensions-array';
+import { flatten, expand } from '@locustjs/extensions-object';
 
 const formEachElement = function () {
 	let selector = 'form';
