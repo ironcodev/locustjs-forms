@@ -1,6 +1,6 @@
 import { isSomeString, isObject, isSomeObject, isEmpty, isFunction, isArray, isBool } from '@locustjs/base';
 import { contains } from '@locustjs/extensions-array';
-import { flatten, expand } from '@locustjs/extensions-object';
+import { flatten, unflatten } from '@locustjs/extensions-object';
 
 const formEachElement = function () {
 	let selector = 'form';
@@ -260,7 +260,7 @@ const toJson = (selector, excludes, expandNames) => {
 		}
 		
 		if (expandNames) {
-			result = expand(result);
+			result = unflatten(result);
 		}
 		
 		if (result.length == 1) {
