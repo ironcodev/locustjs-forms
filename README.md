@@ -75,7 +75,7 @@ I Agree = -
 To get the form data as a json object we can use the following code:
 
 ```javascript
-import { toJson } from 'locustjs-forms';
+import { toJson } from '@locustjs/forms';
 
 const data = toJson('.my-form');
 
@@ -112,7 +112,7 @@ console.log(data);
 There is a FormHelper object with methods with the same name as above functions. So, there's no need to import functions separately. We can only import FormHelper and use its methods.
 
 ```javascript
-import FormHelper from 'locustjs-forms';
+import FormHelper from '@locustjs/forms';
 
 var x = FormHelper.toJson('#my-form');
 
