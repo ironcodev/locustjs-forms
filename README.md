@@ -92,22 +92,22 @@ console.log(data);
 ```
 ## List of utility functions
 - formEachElement(selector, callback, [excludes]): This function iterates over one or more forms whose selector are specified in 'selector' argument and calls the 'callback' argument on each form element it finds in the form. The arguments passed to the callback are: form, element, elementIndex, formIndex. Using the third parameter 'excludes' one can exclude some form elements, so that they are not inlcuded in iteration.
--    formEach(selector, callback, [excludes]): This function does the same thing as formEachElement, except that it ignores buttons and fieldsets (formEachElement also iterates buttons and fieldsets).
--    isEditable(element): This function checks whether given element is an input entry element (user can potentially enter its value) or not. Editable elements are textboxes, radio buttons, checkboxes, textareas, selects.
--    disableForm(selector): This function disables a form and its elements.
--    enableForm(selector): This function enables a form and its elements.
--    clearForm(selector): This function clears a form and its elements.
--    resetForm(selector): This function resets a form and its elements.
--    readOnlyForm(selector): This function makes a form and its elements readonly.
--    unreadOnlyForm(selector): This function makes a form and its elements writable.
--   getValue(form, elementName): This function returns value a form element based on its name.
--    setValue(form, elementName, value): This function sets a value on a form element based on its name.
--    toJson(form, [excludes]): This function serializes a form into json.
--    fromJson(form, obj): This function fills a form based on a json object.
--    toArray(form): This functions serializes form element values into array.
--    fromArray(form, arr): This function fills a form based on an array of values.
--    post(url, data): This function creates an arbitrary form, fills it with data and posts the form to the specified target url in HTTP POST method.
-*    Form: This is a helper class with various helper methods.
+-    `formEach(selector, callback, [excludes])`: This function does the same thing as formEachElement, except that it ignores buttons and fieldsets (formEachElement also iterates buttons and fieldsets).
+-    `isEditable(element)`: This function checks whether given element is an input entry element (user can potentially enter its value) or not. Editable elements are textboxes, radio buttons, checkboxes, textareas, selects.
+-    `disableForm(selector)`: This function disables a form and its elements.
+-    `enableForm(selector)`: This function enables a form and its elements.
+-    `clearForm(selector)`: This function clears a form and its elements.
+-    `resetForm(selector)`: This function resets a form and its elements.
+-    `readOnlyForm(selector)`: This function makes a form and its elements readonly.
+-    `unreadOnlyForm(selector)`: This function makes a form and its elements writable.
+-    `getValue(form, elementName)`: This function returns value a form element based on its name.
+-    `setValue(form, elementName, value)`: This function sets a value on a form element based on its name.
+-    `toJson(form, [excludes])`: This function serializes a form into json.
+-    `fromJson(form, obj)`: This function fills a form based on a json object.
+-    `toArray(form)`: This functions serializes form element values into array.
+-    `fromArray(form, arr)`: This function fills a form based on an array of values.
+-    `post(url, data)`: This function creates an arbitrary form, fills it with data and posts the form to the specified target url in HTTP POST method.
+*    `Form`: This is a helper class with various helper methods.
 
 There is a FormHelper object with methods with the same name as above functions. So, there's no need to import functions separately. We can only import FormHelper and use its methods.
 
@@ -126,20 +126,20 @@ FormHelper.fromJson('#my-form');
 ### Form class
 This class provides more convenience when working with a form, removing the need to refer to the form over and over again.
 
-- each(callback)
-- eachElement(callback)
-- enable()
-- disable()
-- readOnly()
-- unreadOnly()
-- clear()
-- reset()
-- fromJson(obj)
-- toJson()
-- fromArray(arr)
-- toArray()
-- getValue(key)
-- setValue(key, value)
+- `each(callback)`
+- `eachElement(callback)`
+- `enable()`
+- `disable()`
+- `readOnly()`
+- `unreadOnly()`
+- `clear()`
+- `reset()`
+- `fromJson(obj)`
+- `toJson()`
+- `fromArray(arr)`
+- `toArray()`
+- `getValue(key)`
+- `setValue(key, value)`
 
 Example:
 ```javascript
