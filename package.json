@@ -1,12 +1,12 @@
 {
   "name": "@locustjs/forms",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "This library provides utility functions to interact with forms and form elements in a web page.",
-  "main": "index.cjs.js",
-  "module": "index.esm.js",
+  "main": "dist/index.js",
+  "module": "src/index.js",
   "scripts": {
-    "build": "babel index.esm.js -o index.cjs.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "test": "node -r esm ./tests/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,18 +20,20 @@
     "json"
   ],
   "author": "Iron Code",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ironcodev/locustjs-forms/issues"
   },
   "homepage": "https://github.com/ironcodev/locustjs-forms#readme",
   "dependencies": {
-    "@locustjs/base": "^2.1.0",
-    "@locustjs/extensions-array": "^2.0.0",
-    "@locustjs/extensions-object": "^2.0.0"
+    "@locustjs/base": "^4.5.1",
+    "@locustjs/extensions-array": "^2.4.2",
+    "@locustjs/extensions-object": "^2.3.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.22.6",
-    "@babel/core": "^7.22.8"
+    "@babel/preset-env": "^7.26.7",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "rollup": "^4.34.9"
   }
 }

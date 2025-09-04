@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@locustjs/forms test</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+      pre.prettyprint {
+        height: 300px;
+        overflow-y: scroll;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page" class="container pt-5">
+      <h3>@locustjs/forms demo</h3>
+
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            href="index.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Single form, no fieldsets, using name attribute"
+            data-bs-placement="bottom"
+            >Basic Example</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link active"
+            aria-current="page"
+            href="no-form.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Using &lt;div&gt; instead of &lt;form&gt;"
+            data-bs-placement="bottom"
+            >Use DIV</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            href="complex-form.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Single form, no fieldsets, no field exclusion"
+            data-bs-placement="bottom"
+            >Complex Form</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            href="exclude-fields.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="A complex form, excluding some fields interactively"
+            data-bs-placement="bottom"
+            >Excluding Fields</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            href="multiple-forms.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Reading multiple forms and getting their data as json"
+            data-bs-placement="bottom"
+            >Multiple Forms</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
+            href="form-interactions.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Working and interacting with the whole form"
+            data-bs-placement="bottom"
+            >Form interaction</a
+          >
+        </li>
+      </ul>
+
+      <h5 class="mt-3">Using DIV</h5>
+      <h6>Use &lt;div&gt; as container instead of &lt;form&gt; tag</h6>
+
+      <div id="frm1" class="my-form mt-3 col-8 offset-2">
+        <div class="mb-3 row">
+          <label for="email" class="col-sm-2 col-form-label">Email</label>
+          <div class="col-sm-10">
+            <input
+              type="text"
+              class="form-control"
+              id="email"
+              value="email@example.com"
+            />
+          </div>
+        </div>
+
+        <div class="mb-3 row">
+          <label for="pass" class="col-sm-2 col-form-label">Password</label>
+          <div class="col-sm-10">
+            <input type="password" class="form-control" id="pass" value="1234" />
+          </div>
+        </div>
+
+        <div class="mb-3 row">
+          <div class="col-sm-10">
+            <button
+              class="btn btn-primary ignore"
+              onclick="test_toJson('#frm1', '#result')"
+              type="button"
+            >
+              toJson
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-8 offset-2">
+          <pre class="prettyprint lang-json border" id="result"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="../dist/index.umd.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/no-form.js"></script>
+  </body>
+</html>

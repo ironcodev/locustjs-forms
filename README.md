@@ -1,6 +1,9 @@
 # About
 This library provides utility functions to interact with forms and form elements in a web page.
 
+## 🔗 Test &amp; Demo
+Check out the live demo [here](https://ironcodev.github.io/locustjs-forms/)
+
 # Install
 ```
 npm i @locustjs/forms
@@ -16,6 +19,11 @@ var someFn = require('@locustjs/forms').someFn;
 ES6
 ```javascript
 import { someFn } from '@locustjs/forms'
+```
+
+# Current Version
+```
+3.0.0
 ```
 
 ## Converting an HTML form into JSON
@@ -66,16 +74,18 @@ Form
 
 Suppose we fill in the form with the following data:
 
+```
 First Name = Johen
 Last Name = Doe
 Sex = Male
 Age Group = 20 to 45
 I Agree = -
+```
 
 To get the form data as a json object we can use the following code:
 
 ```javascript
-import { toJson } from 'locustjs-forms';
+import { toJson } from '@locustjs/forms';
 
 const data = toJson('.my-form');
 
@@ -90,76 +100,118 @@ console.log(data);
   }
 */
 ```
-## List of utility functions
-- formEachElement(selector, callback, [excludes]): This function iterates over one or more forms whose selector are specified in 'selector' argument and calls the 'callback' argument on each form element it finds in the form. The arguments passed to the callback are: form, element, elementIndex, formIndex. Using the third parameter 'excludes' one can exclude some form elements, so that they are not inlcuded in iteration.
--    formEach(selector, callback, [excludes]): This function does the same thing as formEachElement, except that it ignores buttons and fieldsets (formEachElement also iterates buttons and fieldsets).
--    isEditable(element): This function checks whether given element is an input entry element (user can potentially enter its value) or not. Editable elements are textboxes, radio buttons, checkboxes, textareas, selects.
--    disableForm(selector): This function disables a form and its elements.
--    enableForm(selector): This function enables a form and its elements.
--    clearForm(selector): This function clears a form and its elements.
--    resetForm(selector): This function resets a form and its elements.
--    readOnlyForm(selector): This function makes a form and its elements readonly.
--    unreadOnlyForm(selector): This function makes a form and its elements writable.
--   getValue(form, elementName): This function returns value a form element based on its name.
--    setValue(form, elementName, value): This function sets a value on a form element based on its name.
--    toJson(form, [excludes]): This function serializes a form into json.
--    fromJson(form, obj): This function fills a form based on a json object.
--    toArray(form): This functions serializes form element values into array.
--    fromArray(form, arr): This function fills a form based on an array of values.
--    post(url, data): This function creates an arbitrary form, fills it with data and posts the form to the specified target url in HTTP POST method.
-*    Form: This is a helper class with various helper methods.
+## Utility functions
+### Form Element Iteration
+|  function | description |
+|-----------|-------------|
+| `formEachElement(selector, callback, excludes)` | iterates over one or more forms whose selector are specified in 'selector' argument and calls the 'callback' argument on each form element it finds. The callback function has a signature as `callback(form, element, elementIndex, formIndex)`. Using the `excludes` parameter, we can exclude some form elements, so that they are not iterated over. |
+| `formEach(selector, callback, excludes)` | This function carries out the same job as `formEachElement`, except that it ignores `buttons` and `fieldsets`, whereas `formEachElement` iterates `buttons` and `fieldsets` as well. |
 
-There is a FormHelper object with methods with the same name as above functions. So, there's no need to import functions separately. We can only import FormHelper and use its methods.
+By default, `selector` is `form`, resulting in iterating over all elements of all forms in the page.
+
+More examples:
 
 ```javascript
-import FormHelper from 'locustjs-forms';
+formEach(callback);  // iterating all elements of all forms
+formEach('#my-form', callback) // iterates over elements in a form whose id is 'my-form'
+formEach('#frm1, #frm2', callback) // iterates over elements in a form whose id is 'frm1' and 'frm2'
+formEach('.my-form', callback) // iterates over elements in all forms whose class is '.my-form'
+formEach('.container .my-form', callback) // iterates over elements in a form enclosed in .container and whose class is 'my-form'
+```
 
-var x = FormHelper.toJson('#my-form');
+### Form Element Manipulation
+|  function | description |
+|-----------|-------------|
+|`disable(selector, excludes, mode = true)` | changes disable mode of a form and its elements based on `mode` value. |
+|`enable(selector, excludes, mode = true)` | changes disable mode of a form and its elements based on `mode` value.|
+|`reset(selector)` | resets a form and its elements.|
+|`clear(selector, excludes, includeHiddenFields = false)` | clears a form and its elements. Its difference with `reset()` method is that it can selectively clear fields, i.e. ignoring a few fields denoted by `excludes` parameter. Moreover, it does not reset hidden input fields by default. In order to also clear hidden fields, the third parameter should be used with `true` argument. |
+|`readOnly(selector, excludes, mode)` | changes readonly mode of a form and its elements, based on `mode` value.|
+|`getValue(form, elementName)` | returns value of a form element based on its name. The `form` parameter could be a form node in DOM or a selector.|
+|`setValue(form, elementName, value)` | sets a value on a form element based on its name.|
+
+`disable`, `enable` and `readOnly` methods have a simpler overload as below:
+
+```javascript
+disable(selector, mode = true)
+enable(selector, mode = true)
+readOnly(selector, mode = true)
+```
+
+So, the following examples are all valid:
+
+```javascript
+disable();  // disables all forms
+disable('#my-form') // disables the form whose id is 'my-form'
+disable('.my-form') // disables all forms whose class is '.my-form'
+disable('.my-form', '.ignore') // disables elements in all forms whose class is '.my-form' excluding elements with '.ignore' class
+disable('.my-form', false); // set disable mode of all elements in the form to 'false'
+```
+
+### Form Serialization/Deserialization
+|  function | description |
+|-----------|-------------|
+|`toJson(form, [excludes])` | serializes a form into json.|
+|`fromJson(form, obj)` | fills a form based on a json object.|
+|`toArray(form)` | serializes form element values into array.|
+|`fromArray(form, arr)` | fills a form based on an array of values.|
+
+### Other
+|  function | description |
+|-----------|-------------|
+| `isEditable(element)` | checks whether given element is a data entry element (user can potentially enter its value) or not. Editable elements are `textboxes`, `radio buttons`, `checkboxes`, `textareas` and `selects`. |
+|`post(url, data)` | creates an arbitrary form, fills it with data and posts the form to the specified target url in HTTP POST method. |
+
+### Form class
+There is a helper `Form` class with static utility methods that eases working with forms. So, there's no need to import functions separately. We can only import `Form` and use its methods.
+
+```javascript
+import { Form } from '@locustjs/forms';
+
+var x = Form.toJson('#my-form');
 
 console.log(x);
 
-FormHelper.clear('#my-form');
+Form.clear('#my-form');
 
-FormHelper.fromJson('#my-form');
+Form.fromJson('#my-form');
 ```
 
-### Form class
-This class provides more convenience when working with a form, removing the need to refer to the form over and over again.
+The `Form` class also provides instance methods making it more convenient when working with a form, removing the need to refer to the form over and over again.
 
-- each(callback)
-- eachElement(callback)
-- enable()
-- disable()
-- readOnly()
-- unreadOnly()
-- clear()
-- reset()
-- fromJson(obj)
-- toJson()
-- fromArray(arr)
-- toArray()
-- getValue(key)
-- setValue(key, value)
+- `each()`
+- `eachElement()`
+- `enable()`
+- `disable()`
+- `readOnly()`
+- `clear()`
+- `reset()`
+- `fromJson()`
+- `toJson()`
+- `fromArray()`
+- `toArray()`
+- `getValue()`
+- `setValue()`
 
 Example:
 ```javascript
-var f = new Form('#my-form');
+const f = new Form('#my-form');
 
 f.each((frm, el) => console.log(el));
 f.enable();
 f.disable();
 f.readOnly();
-f.unreadOnly();
+f.readOnly(false);
 f.reset();
 
-var x = f.toJson();
+const x = f.toJson();
 
 console.log(x);
 
 f.clear();
 f.fromJson(x);
 
-var arr = f.toArray();
+const arr = f.toArray();
 
 console.log(arr);
 
