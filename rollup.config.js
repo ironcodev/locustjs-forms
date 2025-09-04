@@ -10,10 +10,16 @@ module.exports = [
         presets: ["@babel/preset-env"],
       }),
     ],
-    output: {
-      file: "./dist/index.js",
-      format: "cjs",
-    },
+    output: [
+      {
+        file: "./dist/index.js",
+        format: "cjs",
+      },
+      {
+        file: "./docs/js/index.js",
+        format: "cjs",
+      },
+    ],
     external: [
       "@locustjs/base",
       "@locustjs/extensions-array",
@@ -28,11 +34,18 @@ module.exports = [
         presets: ["@babel/preset-env"],
       }),
     ],
-    output: {
-      name: "@locustjs/forms",
-      file: "./dist/index.umd.js",
-      format: "umd",
-    },
+    output: [
+      {
+        name: "@locustjs/forms",
+        file: "./dist/index.umd.js",
+        format: "umd",
+      },
+      {
+        name: "@locustjs/forms",
+        file: "./docs/js/index.umd.js",
+        format: "umd",
+      },
+    ],
     plugins: [nodeResolve()],
   },
 ];
