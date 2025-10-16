@@ -8,92 +8,95 @@ const toArray = (selector, excludes) => {
 
   formEach(
     selector,
-    (frm, el, i, j) => {
-      if (result[j] == undefined) {
-        result[j] = [];
+    ({ element, index, formIndex }) => {
+      if (result[formIndex] == undefined) {
+        result[formIndex] = [];
       }
 
-      let _type = (el.type || "").toLowerCase();
-      let _tag = (el.tagName || "").toLowerCase();
-      let _name = el.name;
-      let _id = el.id;
+      let _type = (element.type || "").toLowerCase();
+      let _tag = (element.tagName || "").toLowerCase();
+      let _name = element.name;
+      let _id = element.id;
       let _key = _name || _id;
 
       if (isEmpty(_key)) {
-        _key = i;
+        _key = index;
       }
 
       if (_type == "checkbox") {
-        let item = checkboxes.find((x) => x.form == j && x.key == _key);
+        let item = checkboxes.find((x) => x.form == formIndex && x.key == _key);
 
         if (!item) {
-          item = { form: j, key: _key, count: 1 };
+          item = { form: formIndex, key: _key, count: 1 };
 
           checkboxes.push(item);
         } else {
           item.count++;
         }
 
-        let index = -1;
+        let _index = -1;
         let arr;
 
-        for (let ii = 0; ii < result[j].length; ii++) {
-          if (result[j][ii].name == _key) {
-            index = ii;
+        for (let ii = 0; ii < result[formIndex].length; ii++) {
+          if (result[formIndex][ii].name == _key) {
+            _index = ii;
             break;
           }
         }
 
-        if (index >= 0) {
-          arr = result[j][index].value;
+        if (_index >= 0) {
+          arr = result[formIndex][_index].value;
         }
 
-        if (el.checked) {
+        if (element.checked) {
           if (arr) {
-            if (hasValue(el)) {
-              arr.push(el.value);
+            if (hasValue(element)) {
+              arr.push(element.value);
             } else {
               arr.push(true);
             }
           } else {
-            if (hasValue(el)) {
-              result[j].push({ name: _key, value: [el.value] });
+            if (hasValue(element)) {
+              result[formIndex].push({ name: _key, value: [element.value] });
             } else {
-              result[j].push({ name: _key, value: [true] });
+              result[formIndex].push({ name: _key, value: [true] });
             }
           }
         }
       } else if (_type == "radio") {
-        if (el.checked) {
-          if (hasValue(el)) {
-            result[j].push({ name: _key, value: el.value });
+        if (element.checked) {
+          if (hasValue(element)) {
+            result[formIndex].push({ name: _key, value: element.value });
           } else {
-            result[j].push({ name: _key, value: true });
+            result[formIndex].push({ name: _key, value: true });
           }
         }
       } else if (_tag == "select") {
-        if (el.multiple) {
+        if (element.multiple) {
           let temp = [];
 
-          for (let ii = 0; ii < el.selectedOptions.length; ii++) {
-            temp.push(el.selectedOptions[ii].value);
+          for (let ii = 0; ii < element.selectedOptions.length; ii++) {
+            temp.push(element.selectedOptions[ii].value);
           }
 
-          result[j].push({ name: _key, value: temp });
+          result[formIndex].push({ name: _key, value: temp });
         } else {
-          if (el.selectedIndex >= 0 && el.selectedIndex < el.options.length) {
-            result[j].push({
+          if (
+            element.selectedIndex >= 0 &&
+            element.selectedIndex < element.options.length
+          ) {
+            result[formIndex].push({
               name: _key,
-              value: el.options[el.selectedIndex]
-                ? el.options[el.selectedIndex].value
+              value: element.options[element.selectedIndex]
+                ? element.options[element.selectedIndex].value
                 : undefined,
             });
           } else {
-            result[j].push({ name: _key, value: undefined });
+            result[formIndex].push({ name: _key, value: undefined });
           }
         }
       } else {
-        result[j].push({ name: _key, value: el.value });
+        result[formIndex].push({ name: _key, value: element.value });
       }
     },
     excludes

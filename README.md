@@ -4,12 +4,12 @@ This library provides utility functions to interact with forms and form elements
 ## 🔗 Test &amp; Demo
 Check out the live demo [here](https://ironcodev.github.io/locustjs-forms/)
 
-# Install
+## Install
 ```
 npm i @locustjs/forms
 ```
 
-# Usage
+## Usage
 
 CommonJs
 ```javascript
@@ -21,14 +21,12 @@ ES6
 import { someFn } from '@locustjs/forms'
 ```
 
-# Current Version
+## Current Version
 ```
-3.0.0
+3.0.1
 ```
 
-## Converting an HTML form into JSON
-example
-Form
+# Main Usage: Serialize a form into JSON
 ```html
 <form class="my-form">
   <div>
@@ -72,17 +70,16 @@ Form
 </form>
 ```
 
-Suppose we fill in the form with the following data:
+Suppose the form contains the following data:
 
 ```
-First Name = Johen
-Last Name = Doe
-Sex = Male
-Age Group = 20 to 45
-I Agree = -
+First Name: Johen
+Last Name: Doe
+Sex: Male
+Age Group: 20 to 45
 ```
 
-To get the form data as a json object we can use the following code:
+To get the form as a javascript object we can use the following code:
 
 ```javascript
 import { toJson } from '@locustjs/forms';
@@ -100,14 +97,14 @@ console.log(data);
   }
 */
 ```
-## Utility functions
-### Form Element Iteration
+# Utility functions
+## Form Element Iteration
 |  function | description |
 |-----------|-------------|
-| `formEachElement(selector, callback, excludes)` | iterates over one or more forms whose selector are specified in 'selector' argument and calls the 'callback' argument on each form element it finds. The callback function has a signature as `callback(form, element, elementIndex, formIndex)`. Using the `excludes` parameter, we can exclude some form elements, so that they are not iterated over. |
-| `formEach(selector, callback, excludes)` | This function carries out the same job as `formEachElement`, except that it ignores `buttons` and `fieldsets`, whereas `formEachElement` iterates `buttons` and `fieldsets` as well. |
+| `formEachElement(selector, callback, excludes)` | iterates over one or more forms whose selector are specified in `selector` argument and calls the `callback` argument on each form element it finds. The callback function has a signature as `callback({ form, element, index, formIndex })`. Using the `excludes` parameter, we can exclude some form elements, so that they are not iterated over. This is explained in `Element Exclusion` section. |
+| `formEach(selector, callback, excludes)` | This function carries out the same job as `formEachElement`, except that it ignores `buttons` and `fieldsets` by default, whereas `formEachElement` iterates `buttons` and `fieldsets` as well. If we specify an `excludes` argument for `formEach` it behaves the same as `formEachElement` |
 
-By default, `selector` is `form`, resulting in iterating over all elements of all forms in the page.
+By default, `selector` is `form`, resulting in iterating over all elements of all &lt;form&gt; tags in the page.
 
 More examples:
 
@@ -119,13 +116,16 @@ formEach('.my-form', callback) // iterates over elements in all forms whose clas
 formEach('.container .my-form', callback) // iterates over elements in a form enclosed in .container and whose class is 'my-form'
 ```
 
-### Form Element Manipulation
+When `formEachElement` or `formEach` find more than one form selector, they return an array.
+Each item in the array is an object that relates to the elements of each form read.
+
+## Form Element Manipulation
 |  function | description |
 |-----------|-------------|
 |`disable(selector, excludes, mode = true)` | changes disable mode of a form and its elements based on `mode` value. |
 |`enable(selector, excludes, mode = true)` | changes disable mode of a form and its elements based on `mode` value.|
 |`reset(selector)` | resets a form and its elements.|
-|`clear(selector, excludes, includeHiddenFields = false)` | clears a form and its elements. Its difference with `reset()` method is that it can selectively clear fields, i.e. ignoring a few fields denoted by `excludes` parameter. Moreover, it does not reset hidden input fields by default. In order to also clear hidden fields, the third parameter should be used with `true` argument. |
+|`clear(selector, excludes, includeHiddenFields = false)` | clears a form and its elements. Its difference with `reset()` method is that it can selectively clear fields, i.e. ignoring a few fields specified by `excludes` parameter. Moreover, it does not reset hidden input fields by default. In order to also clear hidden fields, the third parameter should be used with `true` argument. |
 |`readOnly(selector, excludes, mode)` | changes readonly mode of a form and its elements, based on `mode` value.|
 |`getValue(form, elementName)` | returns value of a form element based on its name. The `form` parameter could be a form node in DOM or a selector.|
 |`setValue(form, elementName, value)` | sets a value on a form element based on its name.|
@@ -148,21 +148,21 @@ disable('.my-form', '.ignore') // disables elements in all forms whose class is 
 disable('.my-form', false); // set disable mode of all elements in the form to 'false'
 ```
 
-### Form Serialization/Deserialization
+## Form Serialization/Deserialization
 |  function | description |
 |-----------|-------------|
-|`toJson(form, [excludes])` | serializes a form into json.|
-|`fromJson(form, obj)` | fills a form based on a json object.|
-|`toArray(form)` | serializes form element values into array.|
-|`fromArray(form, arr)` | fills a form based on an array of values.|
+|`toJson(selector, excludes, expandNames)` | serializes a form into json.|
+|`fromJson(selector, obj, excludes, flattenProps)` | fills a form based on a json object.|
+|`toArray(selector, excludes)` | serializes form element values into array.|
+|`fromArray(selector, arr, excludes)` | fills a form based on an array of values.|
 
-### Other
+## Other
 |  function | description |
 |-----------|-------------|
 | `isEditable(element)` | checks whether given element is a data entry element (user can potentially enter its value) or not. Editable elements are `textboxes`, `radio buttons`, `checkboxes`, `textareas` and `selects`. |
 |`post(url, data)` | creates an arbitrary form, fills it with data and posts the form to the specified target url in HTTP POST method. |
 
-### Form class
+## Form class
 There is a helper `Form` class with static utility methods that eases working with forms. So, there's no need to import functions separately. We can only import `Form` and use its methods.
 
 ```javascript
@@ -224,4 +224,84 @@ console.log(f.getValue('age-group'));
 
 f.setValue('firstname', 'John');
 f.setValue('age-group', 4);
+```
+
+# Element Exclusion
+Some form utility functions receive an `excludes` parameter that is used to exclude form elements during their operation.
+
+The `excludes` could be a selector or a custom function.
+In simplest form, we can apply a custom css class such as `.ignore` to some of our form elements and then specify this class
+for the `excludes` parameter in functions such as `toJson`, `readOnly`, `disable`, etc.
+
+Example:
+```javascript
+import { toJson, readOnly } from "@locustjs/forms";
+
+const data = toJson('.my-form', '.ignore'); // ignore elements with .ignore css class
+
+readOnly('.my-form', '.ignore');  // readonly all elements except those with .ignore css class
+```
+
+When specifying a custom function for the `excludes` parameter, the function should follow the following signature:
+
+```javascript
+fnExclude({ form, element, index, formIndex }): bool
+```
+
+The function should return `true` or `false` in order to specify the element should be ignored or not.
+
+# Expanding names
+The `toJson` function has a third parameter named `exapndNames`. If we use dot character in the name of our form elements and specify `true` for `expandNames` in `toJson` function, it will turn such form elements into object, resulting in a nested object being returned.
+
+Example:
+
+```html
+<form class="my-form">
+  <fieldset>
+    <legend>Account Info</legend>
+    <label>
+      <span>User Name</span>
+      <input type="text" name="user.name" />
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="user.pass" />
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Personal Info</legend>
+    <label>
+      <span>First Name</span>
+      <input type="text" name="person.firstName" />
+    </label>
+    <label>
+      <span>Last Name</span>
+      <input type="text" name="person.lastName" />
+    </label>
+  </fieldset>
+
+  
+</form>
+```
+
+
+```javascript
+import { toJson } from '@locustjs/forms';
+
+const data = toJson('.my-form', '', true);
+
+console.log(data);
+/*
+  {
+    user: {
+      "name": "user1",
+      "pass": "1234",
+    },
+    person: {
+      "firstName": "John",
+      "lastName": "Doe",
+    }
+  }
+*/
 ```

@@ -29,13 +29,13 @@ const formEachElement = function () {
       if (isArray(arg)) {
         const classNames = arg.filter((x) => x && x[0] == ".");
 
-        excludes = (frm, el) => {
-          if (contains(arg, el.tagName)) {
+        excludes = ({ element }) => {
+          if (contains(arg, element.tagName)) {
             return true;
           }
 
           for (let className of classNames) {
-            for (let elClassName of el.classList) {
+            for (let elClassName of element.classList) {
               if (elClassName == className.substr(1)) {
                 return true;
               }
@@ -107,8 +107,15 @@ const formEachElement = function () {
 
         if (elements && elements.length) {
           for (let j = 0; j < elements.length; j++) {
-            if (!hasExcludes || !excludes(frm, elements[j], j, i)) {
-              const r = callback(frm, elements[j], j, i);
+            const args = {
+              form: frm,
+              element: elements[j],
+              index: j,
+              formIndex: i,
+            };
+
+            if (!hasExcludes || !excludes(args)) {
+              const r = callback(args);
 
               arr.push(r);
             }

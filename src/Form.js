@@ -9,52 +9,46 @@ import { getValue, setValue } from "./get-set-value";
 
 class Form {
   constructor(selector) {
-    this._form = document.querySelector(selector);
-  }
-  get instance() {
-    return this._form;
-  }
-  set instance(value) {
-    this._form = value;
+    this.selector = selector;
   }
   each(callback, excludes) {
-    return formEach(this.instance, callback, excludes);
+    return formEach(this.selector, callback, excludes);
   }
   eachElement(callback, excludes) {
-    return formEachElement(this.instance, callback, excludes);
+    return formEachElement(this.selector, callback, excludes);
   }
   enable(...args) {
-    enable(this.instance, ...args);
+    enable(this.selector, ...args);
   }
   disable(...args) {
-    disable(this.instance, ...args);
+    disable(this.selector, ...args);
   }
   readOnly(...args) {
-    readOnly(this.instance, ...args);
+    readOnly(this.selector, ...args);
   }
   clear(...args) {
-    clear(this.instance, ...args);
+    clear(this.selector, ...args);
   }
   reset() {
-    reset(this.instance);
+    reset(this.selector);
   }
   fromJson(...args) {
-    fromJson(this.instance, ...args);
+    fromJson(this.selector, ...args);
   }
   toJson() {
-    return toJson(this.instance);
+    return toJson(this.selector);
   }
   fromArray(...args) {
-    fromArray(this.instance, ...args);
+    fromArray(this.selector, ...args);
   }
   toArray() {
-    return toArray(this.instance);
+    return toArray(this.selector);
   }
   getValue(key) {
-    return getValue(this.instance, key);
+    return getValue(this.selector, key);
   }
   setValue(key, value) {
-    setValue(this.instance, key, value);
+    setValue(this.selector, key, value);
   }
 
   static each(...args) {

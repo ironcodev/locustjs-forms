@@ -1,9 +1,9 @@
-const has = (el, name) => {
+const has = (element, name) => {
   let result = false;
 
-  const attrs = el.attributes;
+  const attrs = element.attributes;
 
-  if (el && el.attributes && el.attributes.length) {
+  if (element && element.attributes && element.attributes.length) {
     for (let i = 0; i < attrs.length; i++) {
       if (attrs[i].name.toLowerCase() == name) {
         result = true;

@@ -3,12 +3,12 @@ import { contains } from "@locustjs/extensions-array";
 import formEach from "./formEach";
 import { hasValue } from "./hasValue";
 
-const fromArray = (selector, obj, excludes) => {
-  if (isArray(obj)) {
+const fromArray = (selector, arr, excludes) => {
+  if (isArray(arr)) {
     let isArrayOfArray = true;
 
-    for (let i = 0; i < obj.length; i++) {
-      if (!isArray(obj[i])) {
+    for (let i = 0; i < arr.length; i++) {
+      if (!isArray(arr[i])) {
         isArrayOfArray = false;
         break;
       }
@@ -16,18 +16,18 @@ const fromArray = (selector, obj, excludes) => {
 
     formEach(
       selector,
-      (frm, el, i, j) => {
-        let _type = (el.type || "").toLowerCase();
-        let _tag = (el.tagName || "").toLowerCase();
-        let _name = el.name;
-        let _id = el.id;
+      ({ form, element, index, formIndex }) => {
+        let _type = (element.type || "").toLowerCase();
+        let _tag = (element.tagName || "").toLowerCase();
+        let _name = element.name;
+        let _id = element.id;
         let _key = _name || _id;
 
         if (isEmpty(_key)) {
-          _key = i;
+          _key = index;
         }
 
-        let data = isArrayOfArray ? obj[j] : obj;
+        let data = isArrayOfArray ? arr[formIndex] : arr;
         let item = data.find((x) => x.name == _key);
         let value;
 
@@ -38,26 +38,26 @@ const fromArray = (selector, obj, excludes) => {
         if (value != null) {
           if (_type == "checkbox" || _type == "radio") {
             if (isBool(value)) {
-              el.checked = value;
+              element.checked = value;
             } else if (isArray(value)) {
               if (value.length == 1) {
-                if (hasValue(el)) {
-                  el.checked = el.value == value[0];
+                if (hasValue(element)) {
+                  element.checked = element.value == value[0];
                 } else {
-                  el.checked = value[0];
+                  element.checked = value[0];
                 }
               } else {
-                if (hasValue(el)) {
-                  el.checked = value.indexOf(el.value) >= 0;
+                if (hasValue(element)) {
+                  element.checked = value.indexOf(element.value) >= 0;
                 } else {
-                  if (_name && frm.querySelectorAll) {
-                    const els = frm.querySelectorAll('[name="' + _name + '"]');
+                  if (_name && form.querySelectorAll) {
+                    const els = form.querySelectorAll('[name="' + _name + '"]');
 
                     if (els && els.length) {
                       for (let _i = 0; _i < els.length; _i++) {
-                        if (els[_i] == el) {
+                        if (els[_i] == element) {
                           if (value.length > _i) {
-                            el.checked = value[_i];
+                            element.checked = value[_i];
                           }
 
                           break;
@@ -68,35 +68,35 @@ const fromArray = (selector, obj, excludes) => {
                 }
               }
             } else {
-              if (hasValue(el)) {
-                el.checked = el.value == value;
+              if (hasValue(element)) {
+                element.checked = element.value == value;
               } else {
-                el.checked = value;
+                element.checked = value;
               }
             }
           } else if (_tag == "select") {
-            if (el.multiple) {
+            if (element.multiple) {
               if (isArray(value)) {
-                for (let ii = 0; ii < el.options.length; ii++) {
-                  el.options[ii].selected = contains(
+                for (let ii = 0; ii < element.options.length; ii++) {
+                  element.options[ii].selected = contains(
                     value,
-                    el.options[ii].value
+                    element.options[ii].value
                   );
                 }
               } else {
-                for (let ii = 0; ii < el.options.length; ii++) {
-                  el.options[ii].selected =
-                    el.options[ii].value == value || ii === value;
+                for (let ii = 0; ii < element.options.length; ii++) {
+                  element.options[ii].selected =
+                    element.options[ii].value == value || ii === value;
                 }
               }
             } else {
-              for (let ii = 0; ii < el.options.length; ii++) {
-                el.options[ii].selected =
-                  el.options[ii].value == value || ii === value;
+              for (let ii = 0; ii < element.options.length; ii++) {
+                element.options[ii].selected =
+                  element.options[ii].value == value || ii === value;
               }
             }
           } else {
-            el.value = value;
+            element.value = value;
           }
         }
       },

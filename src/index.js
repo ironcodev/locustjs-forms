@@ -1,4 +1,15 @@
-import { disable, enable, readOnly, reset, clear } from "./form-operations";
+import {
+  disable,
+  enable,
+  readOnly,
+  reset,
+  clear,
+  FormElementReadOnlyStrategyBase,
+  FormElementReadOnlyByAttribute,
+  FormElementReadOnlyByJavascript,
+  FormElementReadOnlyByCss,
+  FormElementReadOnlyFactory,
+} from "./form-operations";
 import formEach from "./formEach";
 import formEachElement from "./formEachElement";
 import fromArray from "./fromArray";
@@ -30,4 +41,9 @@ export {
   fromArray,
   post,
   Form,
+  FormElementReadOnlyStrategyBase,
+  FormElementReadOnlyByAttribute,
+  FormElementReadOnlyByJavascript,
+  FormElementReadOnlyByCss,
+  FormElementReadOnlyFactory,
 };

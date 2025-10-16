@@ -15,10 +15,6 @@ module.exports = [
         file: "./dist/index.js",
         format: "cjs",
       },
-      {
-        file: "./docs/js/index.js",
-        format: "cjs",
-      },
     ],
     external: [
       "@locustjs/base",

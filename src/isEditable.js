@@ -1,12 +1,12 @@
 const NON_DATA_ENTRY_INPUT_TYPES = ["button", "submit", "reset", "image"];
 const NON_DATA_ENTRY_TAGS = ["button", "fieldset", "legend"];
 
-const isEditable = (el) => {
+const isEditable = (element) => {
   let result = false;
 
-  if (el) {
-    let _type = (el.type || "").toLowerCase();
-    let _tag = (el.tagName || "").toLowerCase();
+  if (element) {
+    let _type = (element.type || "").toLowerCase();
+    let _tag = (element.tagName || "").toLowerCase();
 
     result = !(
       NON_DATA_ENTRY_INPUT_TYPES.indexOf(_type) >= 0 ||

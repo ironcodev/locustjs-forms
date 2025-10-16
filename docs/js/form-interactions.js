@@ -77,3 +77,14 @@ function test_setValue() {
     getForm().setValue(name, value);
   }
 }
+
+function make_readOnly() {
+  const strategy = document.querySelector('[name="readonly-strategy"]').value;
+
+  getForm().readOnly('', true, strategy);
+}
+function make_unReadOnly() {
+  const strategy = document.querySelector('[name="readonly-strategy"]').value;
+
+  getForm().readOnly('', false, strategy);
+}

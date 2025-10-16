@@ -10,9 +10,9 @@ window.onload = function () {
   }
 };
 
-function test_toJson(selector = "", resultSelector = "#result") {
+function test_toJson(selector = "", resultSelector = "#result", expandNames = false) {
   const { toJson } = window["@locustjs/forms"];
-  const json = toJson(selector, ".chk-disable,.chk-ignore,.ignore");
+  const json = toJson(selector, ".chk-disable,.chk-ignore,.ignore", expandNames);
   const result = document.querySelector(resultSelector);
   const pre = document.querySelector("pre");
 

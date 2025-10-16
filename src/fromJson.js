@@ -16,24 +16,24 @@ const fromJson = (selector, obj, excludes, flattenProps) => {
 
     formEach(
       selector,
-      (frm, el, i, j) => {
-        let _type = (el.type || "").toLowerCase();
-        let _tag = (el.tagName || "").toLowerCase();
-        let _name = el.name;
-        let _id = el.id;
+      ({ element, index, formIndex }) => {
+        let _type = (element.type || "").toLowerCase();
+        let _tag = (element.tagName || "").toLowerCase();
+        let _name = element.name;
+        let _id = element.id;
         let _key = _name || _id;
 
         if (isEmpty(_key)) {
-          _key = i;
+          _key = index;
         }
 
-        let form = isArray(obj) ? obj[j] : obj;
+        let frm = isArray(obj) ? obj[formIndex] : obj;
 
         if (flattenProps) {
-          form = flatten(form);
+          frm = flatten(frm);
         }
 
-        let value = form && form[_key];
+        let value = frm && frm[_key];
 
         if (value != null) {
           if (isSomeObject(value) && isSomeString(_key)) {
@@ -59,10 +59,12 @@ const fromJson = (selector, obj, excludes, flattenProps) => {
 
           if (value != null) {
             if (_type == "checkbox" || _type == "radio") {
-              let item = checkboxes.find((x) => x.form == j && x.key == _key);
+              let item = checkboxes.find(
+                (x) => x.form == formIndex && x.key == _key
+              );
 
               if (!item) {
-                item = { form: j, key: _key, count: 1 };
+                item = { form: formIndex, key: _key, count: 1 };
 
                 checkboxes.push(item);
               } else {
@@ -70,54 +72,54 @@ const fromJson = (selector, obj, excludes, flattenProps) => {
               }
 
               if (isBool(value)) {
-                el.checked = value;
+                element.checked = value;
               } else if (isArray(value)) {
                 if (value.length == 1) {
-                  if (hasValue(el)) {
-                    el.checked = el.value == value[0];
+                  if (hasValue(element)) {
+                    element.checked = element.value == value[0];
                   } else {
-                    el.checked = value[0];
+                    element.checked = value[0];
                   }
                 } else {
-                  if (hasValue(el)) {
-                    el.checked = value.indexOf(el.value) >= 0;
+                  if (hasValue(element)) {
+                    element.checked = value.indexOf(element.value) >= 0;
                   } else {
-                    el.checked =
+                    element.checked =
                       item.count > 0 &&
                       item.count <= value.length &&
                       value[item.count - 1];
                   }
                 }
               } else {
-                if (hasValue(el)) {
-                  el.checked = el.value == value;
+                if (hasValue(element)) {
+                  element.checked = element.value == value;
                 } else {
-                  el.checked = value;
+                  element.checked = value;
                 }
               }
             } else if (_tag == "select") {
-              if (el.multiple) {
+              if (element.multiple) {
                 if (isArray(value)) {
-                  for (let ii = 0; ii < el.options.length; ii++) {
-                    el.options[ii].selected = contains(
+                  for (let ii = 0; ii < element.options.length; ii++) {
+                    element.options[ii].selected = contains(
                       value,
-                      el.options[ii].value
+                      element.options[ii].value
                     );
                   }
                 } else {
-                  for (let ii = 0; ii < el.options.length; ii++) {
-                    el.options[ii].selected =
-                      el.options[ii].value == value || ii === value;
+                  for (let ii = 0; ii < element.options.length; ii++) {
+                    element.options[ii].selected =
+                      element.options[ii].value == value || ii === value;
                   }
                 }
               } else {
-                for (let ii = 0; ii < el.options.length; ii++) {
-                  el.options[ii].selected =
-                    el.options[ii].value == value || ii === value;
+                for (let ii = 0; ii < element.options.length; ii++) {
+                  element.options[ii].selected =
+                    element.options[ii].value == value || ii === value;
                 }
               }
             } else {
-              el.value = value;
+              element.value = value;
             }
           }
         }

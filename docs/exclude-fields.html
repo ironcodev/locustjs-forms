@@ -95,6 +95,17 @@
           <a
             class="nav-link"
             aria-current="page"
+            href="expand-names.html"
+            data-bs-toggle="tooltip"
+            data-bs-title="Receive nested objects when reading forms"
+            data-bs-placement="bottom"
+            >Expand Names</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            aria-current="page"
             href="form-interactions.html"
             data-bs-toggle="tooltip"
             data-bs-title="Working and interacting with the whole form"
@@ -163,6 +174,7 @@
               <input
                 class="form-check-input"
                 id="cash"
+                name="paymentMethod"
                 type="radio"
                 value="cash"
               />
@@ -172,6 +184,7 @@
               <input
                 class="form-check-input"
                 id="cheque"
+                name="paymentMethod"
                 type="radio"
                 value="cheque"
               />
@@ -181,6 +194,7 @@
               <input
                 class="form-check-input"
                 id="card"
+                name="paymentMethod"
                 type="radio"
                 value="card"
               />
@@ -192,6 +206,7 @@
               <input
                 class="form-check-input"
                 id="crypto"
+                name="paymentMethod"
                 type="radio"
                 value="crypto"
               />
@@ -362,13 +377,42 @@
 
       <div class="row">
         <div class="mb-3 col-8 offset-2">
-          <div class="d-grid">
+          <div class="">
             <button
-              class="btn btn-primary"
+              class="btn btn-primary ignore mt-2"
               onclick="test_toJson()"
               type="button"
             >
               toJson
+            </button>
+
+            <button
+              class="btn btn-primary ignore mt-2"
+              onclick="make_disabled()"
+              type="button"
+            >
+              Disable
+            </button>
+            <button
+              class="btn btn-primary ignore mt-2"
+              onclick="make_enabled()"
+              type="button"
+            >
+              Enable
+            </button>
+            <button
+              class="btn btn-primary ignore mt-2"
+              onclick="make_readOnly()"
+              type="button"
+            >
+              ReadOnly
+            </button>
+            <button
+              class="btn btn-primary ignore mt-2"
+              onclick="make_unReadOnly()"
+              type="button"
+            >
+              Un-ReadOnly
             </button>
           </div>
         </div>
